@@ -1,7 +1,6 @@
 // src/services/transactional/shiftHarianPegawai/generate.service.js
 
-import { getSequelize } from "../../../libraries/databaseInstance.library.js";
-//import logger from "../../../utils/logger.utils.js";
+import { getSequelize } from "../../../libraries/databaseInstance.library.js"; 
 import { isHariKerja } from "../../../utils/hariKerja.utils.js";
 import findActiveShiftPegawai from "../../../repositories/relational/shiftPegawai/findActive.repository.js";
 import findByPegawaiAndTanggal from "../../../repositories/transactional/shiftHarianPegawai/findByPegawaiAndTanggal.repository.js";
@@ -28,13 +27,7 @@ export const generateShiftHarianPegawaiService = async ({
     );
   }
 
-  try {
-    logger.info("[ShiftHarianGenerator] Memulai generate shift harian", {
-      tanggalMulai,
-      tanggalAkhir,
-      idPegawai,
-      mode,
-    });
+  try { 
 
     const shiftPegawaiList = await findActiveShiftPegawai(idPegawai, {
       transaction,
@@ -65,11 +58,7 @@ export const generateShiftHarianPegawaiService = async ({
 
         results.totalGenerated += pegawaiResults.inserted + pegawaiResults.overwritten;
         results.skippedNonWorkingDays += pegawaiResults.skippedNonWorkingDays;
-      } catch (error) {
-        logger.error("[ShiftHarianGenerator] Error untuk pegawai", {
-          idPegawai: shiftPegawai.id_pegawai,
-          error: error.message,
-        });
+      } catch (error) { 
 
         results.errors.push({
           idPegawai: shiftPegawai.id_pegawai,
@@ -79,12 +68,7 @@ export const generateShiftHarianPegawaiService = async ({
       }
     }
 
-    await transaction.commit();
-
-    logger.info(
-      "[ShiftHarianGenerator] Selesai generate shift harian",
-      results
-    );
+    await transaction.commit(); 
 
     return {
       success: true,
@@ -92,12 +76,7 @@ export const generateShiftHarianPegawaiService = async ({
       data: results,
     };
   } catch (error) {
-    await transaction.rollback();
-
-    logger.error("[ShiftHarianGenerator] Error generate shift harian", {
-      error: error.message,
-      stack: error.stack,
-    });
+    await transaction.rollback(); 
 
     throw error;
   }
@@ -143,14 +122,7 @@ const processShiftForPegawai = async ({
       throw new Error(
         `Shift kerja ${shiftPegawai.id_shift_kerja} tidak ditemukan`
       );
-    }
-
-    logger.debug("[ShiftHarianGenerator] Fixed shift info", {
-      idPegawai: shiftPegawai.id_pegawai,
-      idShiftKerja: fixedShiftInfo.id,
-      namaShift: fixedShiftInfo.nama,
-      hariKerja: fixedShiftInfo.hari_kerja,
-    });
+    } 
   }
 
   if (isRotatingShift) {
@@ -187,13 +159,7 @@ const processShiftForPegawai = async ({
         `Pattern tidak lengkap untuk shift group ${shiftPegawai.id_shift_group}. Expected ${cycleLength} detail, got ${shiftPattern.length}`
       );
     }
-
-    logger.debug("[ShiftHarianGenerator] Shift group info", {
-      idPegawai: shiftPegawai.id_pegawai,
-      idShiftGroup: shiftPegawai.id_shift_group,
-      cycleLength,
-      offset: shiftPegawai.offset_rotasi_hari || 0,
-    });
+ 
   }
 
   const offset = shiftPegawai.offset_rotasi_hari || 0;
@@ -234,28 +200,11 @@ const processShiftForPegawai = async ({
       if (!shiftInfo) {
         throw new Error(`Shift kerja ${shiftId} tidak ditemukan`);
       }
-
-      logger.debug("[ShiftHarianGenerator] Cycle calculation", {
-        tanggal,
-        dayIndex,
-        offset,
-        cycleLength,
-        cyclePosition,
-        shiftId,
-        namaShift: shiftInfo.nama,
-        hariKerja: shiftInfo.hari_kerja,
-      });
+ 
     }
 
     // VALIDASI HARI KERJA
-    if (!isHariKerja(tanggal, shiftInfo.hari_kerja)) {
-      logger.debug("[ShiftHarianGenerator] Skip non-working day", {
-        idPegawai: shiftPegawai.id_pegawai,
-        tanggal,
-        shiftId,
-        namaShift: shiftInfo.nama,
-        hariKerja: shiftInfo.hari_kerja,
-      });
+    if (!isHariKerja(tanggal, shiftInfo.hari_kerja)) { 
       results.skippedNonWorkingDays++;
       continue;
     }
@@ -267,22 +216,13 @@ const processShiftForPegawai = async ({
     );
 
     if (existing && existing.length > 0) {
-      if (mode === "skip") {
-        logger.debug("[ShiftHarianGenerator] Skip existing data", {
-          idPegawai: shiftPegawai.id_pegawai,
-          tanggal,
-        });
+      if (mode === "skip") { 
         results.skipped++;
         continue;
       } else if (mode === "overwrite") {
         await deleteByPegawaiAndTanggal(shiftPegawai.id_pegawai, tanggal, {
           transaction,
-        });
-
-        logger.info("[ShiftHarianGenerator] Overwrite existing data", {
-          idPegawai: shiftPegawai.id_pegawai,
-          tanggal,
-        });
+        }); 
         results.overwritten++;
       } else if (mode === "error") {
         throw new Error(
@@ -310,18 +250,7 @@ const processShiftForPegawai = async ({
     );
 
     results.inserted++;
-  }
-
-  logger.info("[ShiftHarianGenerator] Selesai untuk pegawai", {
-    idPegawai: shiftPegawai.id_pegawai,
-    namaPegawai: shiftPegawai.nama_pegawai,
-    inserted: results.inserted,
-    skipped: results.skipped,
-    overwritten: results.overwritten,
-    skippedNonWorkingDays: results.skippedNonWorkingDays,
-    cycleLength: cycleLength || "FIXED",
-    totalDays: tanggalArray.length,
-  });
+  } 
 
   return results;
 };
