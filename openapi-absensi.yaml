@@ -1,0 +1,1398 @@
+openapi: 3.0.3
+info:
+  title: Bank Sultra - MSDM Modul Absensi API
+  description: |
+    API Documentation untuk Sistem Manajemen Absensi Bank Sulawesi Tenggara
+    
+    **Response Format**:
+    ```json
+    {
+      "code": 200,
+      "message": "Success", 
+      "data": {},
+      "metadata": {}
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: Divisi SDM
+
+servers:
+  - url: http://172.16.52.46:5000/api
+    description: Development Server
+
+tags:
+  - name: System
+    description: Health check & database operations
+  - name: Master - Lokasi Kerja
+  - name: Master - Kebijakan Absensi
+  - name: Master - Shift Group
+  - name: Master - Shift Kerja
+  - name: Master - Hari Libur
+  - name: Relational - Shift Group Detail
+  - name: Relational - Shift Pegawai
+  - name: Relational - Lokasi Kerja Pegawai
+  - name: Transactional - Log Raw Absensi
+  - name: Transactional - Shift Harian Pegawai
+  - name: Transactional - Absensi Harian
+  - name: Laporan - Realisasi Lembur
+
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  env:
+                    type: string
+                  db:
+                    type: string
+                  tracing:
+                    type: string
+
+  /databases/setup:
+    post:
+      tags:
+        - System
+      summary: Setup encrypted database configuration
+      description: Create encrypted database config file (.json.enc)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - dbName
+                - dbUser
+                - dbPassword
+                - dbHost
+                - dbPort
+                - dbDialect
+                - fileName
+              properties:
+                dbName:
+                  type: string
+                  minLength: 1
+                  example: "absensi_db"
+                dbUser:
+                  type: string
+                  minLength: 1
+                  example: "postgres"
+                dbPassword:
+                  type: string
+                  example: "password"
+                dbHost:
+                  type: string
+                  example: "localhost"
+                dbPort:
+                  type: integer
+                  minimum: 1
+                  maximum: 65535
+                  example: 5432
+                dbDialect:
+                  type: string
+                  enum: [postgres, mysql, mariadb, sqlite, mssql]
+                  example: "postgres"
+                fileName:
+                  type: string
+                  pattern: '^[a-zA-Z0-9._-]+$'
+                  example: "development"
+                timezone:
+                  type: string
+                  pattern: '^[+-]\d{2}:\d{2}$'
+                  default: "+07:00"
+                  example: "+07:00"
+                pool:
+                  type: object
+                  properties:
+                    max:
+                      type: integer
+                      minimum: 0
+                      default: 20
+                    min:
+                      type: integer
+                      minimum: 0
+                      default: 0
+                    acquire:
+                      type: integer
+                      minimum: 0
+                      default: 30000
+                    idle:
+                      type: integer
+                      minimum: 0
+                      default: 10000
+                    evict:
+                      type: integer
+                      minimum: 0
+                      default: 1000
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: "Encrypted database config created"
+                  data:
+                    type: object
+                    properties:
+                      fileName:
+                        type: string
+                      profile:
+                        type: string
+                  metadata:
+                    type: object
+                    properties:
+                      outputPath:
+                        type: string
+                      note:
+                        type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          description: Internal Server Error
+
+  # ============================================
+  # MASTER - LOKASI KERJA
+  # ============================================
+  /lokasi-kerja:
+    get:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Get all lokasi kerja
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: type_lokasi
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+    
+    post:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Create lokasi kerja
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - kode_referensi
+                - type_lokasi
+                - nama
+                - radius
+              properties:
+                id:
+                  type: string
+                  maxLength: 8
+                kode_referensi:
+                  type: string
+                  maxLength: 20
+                type_lokasi:
+                  type: string
+                  enum: [CABANG, KANTOR_PUSAT, KANTOR_KAS, UNIT_LAYANAN, CASH_CENTER, LOKASI_KHUSUS]
+                nama:
+                  type: string
+                  maxLength: 100
+                alamat:
+                  type: string
+                  nullable: true
+                latitude:
+                  type: number
+                  minimum: -90
+                  maximum: 90
+                longitude:
+                  type: number
+                  minimum: -180
+                  maximum: 180
+                radius:
+                  type: integer
+                  minimum: 1
+                  maximum: 1000
+                is_active:
+                  type: boolean
+                keterangan:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /lokasi-kerja/{id}:
+    get:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Get lokasi kerja by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Update lokasi kerja
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                kode_referensi:
+                  type: string
+                type_lokasi:
+                  type: string
+                nama:
+                  type: string
+                alamat:
+                  type: string
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+                radius:
+                  type: integer
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Delete lokasi kerja
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # MASTER - KEBIJAKAN ABSENSI
+  # ============================================
+  /kebijakan-absensi:
+    get:
+      tags:
+        - Master - Kebijakan Absensi
+      summary: Get all kebijakan absensi
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Master - Kebijakan Absensi
+      summary: Create kebijakan absensi
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /kebijakan-absensi/{id}:
+    get:
+      tags:
+        - Master - Kebijakan Absensi
+      summary: Get kebijakan absensi by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Master - Kebijakan Absensi
+      summary: Update kebijakan absensi
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Master - Kebijakan Absensi
+      summary: Delete kebijakan absensi
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # MASTER - SHIFT GROUP
+  # ============================================
+  /shift-group:
+    get:
+      tags:
+        - Master - Shift Group
+      summary: Get all shift group
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Master - Shift Group
+      summary: Create shift group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - nama
+              properties:
+                id:
+                  type: string
+                  maxLength: 8
+                nama:
+                  type: string
+                  maxLength: 100
+                durasi_rotasi_hari:
+                  type: integer
+                  minimum: 1
+                keterangan:
+                  type: string
+                  nullable: true
+                is_active:
+                  type: boolean
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-group/{id}:
+    get:
+      tags:
+        - Master - Shift Group
+      summary: Get shift group by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Master - Shift Group
+      summary: Update shift group
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Master - Shift Group
+      summary: Delete shift group
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # MASTER - SHIFT KERJA
+  # ============================================
+  /shift-kerja:
+    get:
+      tags:
+        - Master - Shift Kerja
+      summary: Get all shift kerja
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Master - Shift Kerja
+      summary: Create shift kerja
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-kerja/{id}:
+    get:
+      tags:
+        - Master - Shift Kerja
+      summary: Get shift kerja by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Master - Shift Kerja
+      summary: Update shift kerja
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Master - Shift Kerja
+      summary: Delete shift kerja
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # MASTER - HARI LIBUR
+  # ============================================
+  /hari-libur:
+    get:
+      tags:
+        - Master - Hari Libur
+      summary: Get all hari libur
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Master - Hari Libur
+      summary: Create hari libur
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tanggal
+                - nama
+              properties:
+                tanggal:
+                  type: string
+                  format: date
+                nama:
+                  type: string
+                  maxLength: 100
+                keterangan:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /hari-libur/{tanggal}:
+    get:
+      tags:
+        - Master - Hari Libur
+      summary: Get hari libur by tanggal
+      parameters:
+        - name: tanggal
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Master - Hari Libur
+      summary: Update hari libur
+      parameters:
+        - name: tanggal
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Master - Hari Libur
+      summary: Delete hari libur
+      parameters:
+        - name: tanggal
+          in: path
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # RELATIONAL - SHIFT GROUP DETAIL
+  # ============================================
+  /shift-group-detail:
+    get:
+      tags:
+        - Relational - Shift Group Detail
+      summary: Get all shift group detail
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: id_shift_group
+          in: query
+          schema:
+            type: string
+        - name: id_shift_kerja
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Relational - Shift Group Detail
+      summary: Create shift group detail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - id_shift_group
+                - id_shift_kerja
+              properties:
+                id:
+                  type: string
+                  maxLength: 12
+                id_shift_group:
+                  type: string
+                  maxLength: 8
+                id_shift_kerja:
+                  type: string
+                  maxLength: 8
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-group-detail/{id}:
+    get:
+      tags:
+        - Relational - Shift Group Detail
+      summary: Get shift group detail by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Relational - Shift Group Detail
+      summary: Update shift group detail
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Relational - Shift Group Detail
+      summary: Delete shift group detail
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # RELATIONAL - SHIFT PEGAWAI
+  # ============================================
+  /shift-pegawai:
+    get:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Get all shift pegawai
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: id_pegawai
+          in: query
+          schema:
+            type: string
+        - name: id_shift_kerja
+          in: query
+          schema:
+            type: string
+        - name: id_shift_group
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Create shift pegawai
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - id_pegawai
+                - tanggal_mulai
+                - id_personal
+                - nama_pegawai
+              properties:
+                id:
+                  type: string
+                  maxLength: 20
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                id_shift_kerja:
+                  type: string
+                  maxLength: 8
+                  nullable: true
+                id_shift_group:
+                  type: string
+                  maxLength: 8
+                  nullable: true
+                tanggal_mulai:
+                  type: string
+                  format: date
+                tanggal_akhir:
+                  type: string
+                  format: date
+                  nullable: true
+                is_active:
+                  type: boolean
+                id_personal:
+                  type: string
+                nama_pegawai:
+                  type: string
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-pegawai/auto:
+    post:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Create shift pegawai with auto-resolve
+      description: Auto menonaktifkan shift lama jika overlap
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-pegawai/{id}:
+    get:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Get shift pegawai by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Update shift pegawai
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Delete shift pegawai
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-pegawai/auto/{id}:
+    put:
+      tags:
+        - Relational - Shift Pegawai
+      summary: Update shift pegawai with auto-resolve
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # RELATIONAL - LOKASI KERJA PEGAWAI
+  # ============================================
+  /lokasi-kerja-pegawai:
+    get:
+      tags:
+        - Relational - Lokasi Kerja Pegawai
+      summary: Get all lokasi kerja pegawai
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: id_pegawai
+          in: query
+          schema:
+            type: string
+        - name: id_lokasi_kerja
+          in: query
+          schema:
+            type: string
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: prioritas_lokasi
+          in: query
+          schema:
+            type: integer
+        - name: tanggal_mulai_berlaku
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir_berlaku
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Relational - Lokasi Kerja Pegawai
+      summary: Create lokasi kerja pegawai
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - id_pegawai
+                - id_lokasi_kerja
+                - tanggal_mulai_berlaku
+              properties:
+                id:
+                  type: string
+                  maxLength: 25
+                id_pegawai:
+                  type: string
+                id_lokasi_kerja:
+                  type: string
+                tanggal_mulai_berlaku:
+                  type: string
+                  format: date
+                tanggal_akhir_berlaku:
+                  type: string
+                  format: date
+                  nullable: true
+                prioritas_lokasi:
+                  type: integer
+                  minimum: 1
+                keterangan:
+                  type: string
+                is_active:
+                  type: boolean
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /lokasi-kerja-pegawai/{id}:
+    get:
+      tags:
+        - Relational - Lokasi Kerja Pegawai
+      summary: Get lokasi kerja pegawai by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Relational - Lokasi Kerja Pegawai
+      summary: Update lokasi kerja pegawai
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Relational - Lokasi Kerja Pegawai
+      summary: Delete lokasi kerja pegawai
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # TRANSACTIONAL - LOG RAW ABSENSI
+  # ============================================
+  /log-raw-absensi:
+    get:
+      tags:
+        - Transactional - Log Raw Absensi
+      summary: Get all log raw absensi
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Transactional - Log Raw Absensi
+      summary: Create log raw absensi (Clock in/out)
+      description: Endpoint untuk mencatat clock in/out dari mesin atau smartphone
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /log-raw-absensi/{id}:
+    get:
+      tags:
+        - Transactional - Log Raw Absensi
+      summary: Get log raw absensi by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Transactional - Log Raw Absensi
+      summary: Update log raw absensi
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Transactional - Log Raw Absensi
+      summary: Delete log raw absensi
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # TRANSACTIONAL - SHIFT HARIAN PEGAWAI
+  # ============================================
+  /shift-harian-pegawai/generate:
+    post:
+      tags:
+        - Transactional - Shift Harian Pegawai
+      summary: Generate shift harian otomatis
+      description: Generate shift harian dari r_shift_pegawai
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-harian-pegawai/manual:
+    post:
+      tags:
+        - Transactional - Shift Harian Pegawai
+      summary: Create shift harian manual
+      description: Untuk penugasan khusus atau override jadwal
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /shift-harian-pegawai/range:
+    get:
+      tags:
+        - Transactional - Shift Harian Pegawai
+      summary: Get shift harian by range
+      parameters:
+        - name: id_pegawai
+          in: query
+          schema:
+            type: string
+        - name: tanggal_mulai
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Transactional - Shift Harian Pegawai
+      summary: Update shift harian by range
+      description: Untuk cuti, izin, tukar shift
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Transactional - Shift Harian Pegawai
+      summary: Delete shift harian by range
+      description: Pembatalan jadwal
+      parameters:
+        - name: id_pegawai
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: tanggal_mulai
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: tanggal_akhir
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+  # ============================================
+  # TRANSACTIONAL - ABSENSI HARIAN
+  # ============================================
+  /absensi-harian/rekonsiliasi:
+    post:
+      tags:
+        - Transactional - Absensi Harian
+      summary: Proses rekonsiliasi absensi harian
+      description: Proses rekonsiliasi log raw absensi menjadi absensi harian untuk tanggal tertentu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tanggal
+              properties:
+                tanggal:
+                  type: string
+                  format: date
+                  example: "2025-01-21"
+                  description: Format YYYY-MM-DD, tidak boleh di masa depan
+      responses:
+        '200':
+          description: Rekonsiliasi berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "Proses rekonsiliasi berhasil"
+                  data:
+                    type: object
+                    properties:
+                      tanggal_proses:
+                        type: string
+                        format: date
+                      total_pegawai:
+                        type: integer
+                      berhasil:
+                        type: integer
+                      gagal:
+                        type: integer
+                      durasi_detik:
+                        type: number
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          description: Internal Server Error
+
+  # ============================================
+  # LAPORAN - REALISASI LEMBUR
+  # ============================================
+  /realisasi-lembur:
+    get:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Get all realisasi lembur
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: id_pegawai
+          in: query
+          schema:
+            type: string
+        - name: periode_bulan_lembur
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: is_data_final
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+    
+    post:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Create realisasi lembur manual
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /realisasi-lembur/generate:
+    post:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Generate realisasi lembur (Single Pegawai)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_pegawai
+                - periode_bulan_lembur
+              properties:
+                id_pegawai:
+                  type: string
+                periode_bulan_lembur:
+                  type: string
+                  format: date
+                  example: "2025-01-01"
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /realisasi-lembur/generate-all:
+    post:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Generate realisasi lembur (All Pegawai)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - periode_bulan_lembur
+              properties:
+                periode_bulan_lembur:
+                  type: string
+                  format: date
+                  example: "2025-01-01"
+      responses:
+        '201':
+          $ref: '#/components/responses/SuccessResponse'
+
+  /realisasi-lembur/{id}:
+    get:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Get realisasi lembur by ID
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    put:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Update realisasi lembur
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+    
+    delete:
+      tags:
+        - Laporan - Realisasi Lembur
+      summary: Delete realisasi lembur
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessResponse'
+
+# ============================================
+# COMPONENTS
+# ============================================
+components:
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    
+    PageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    
+    LimitParam:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  responses:
+    SuccessResponse:
+      description: Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 200
+              message:
+                type: string
+                example: Success
+              data:
+                type: object
+              metadata:
+                type: object
+                nullable: true
+    
+    SuccessListResponse:
+      description: Success with pagination
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 200
+              message:
+                type: string
+                example: Success
+              data:
+                type: array
+                items:
+                  type: object
+              metadata:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+                  totalPages:
+                    type: integer
+    
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 400
+              message:
+                type: string
+                example: Validation Error
+              data:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+              metadata:
+                type: object
+                nullable: true
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
