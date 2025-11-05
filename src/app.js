@@ -15,8 +15,7 @@ try {
 // Start HTTP Server
 httpServer.listen(httpPort, "0.0.0.0", () => { 
   logger.info(`HTTP Server running on port ${httpPort}`, {
-    env: process.env.NODE_ENV,
-    tracing: process.env.SIGNOZ_ENABLED === 'true' ? 'enabled' : 'disabled',
+    env: process.env.NODE_ENV
   });
 });
 
@@ -24,22 +23,10 @@ httpServer.listen(httpPort, "0.0.0.0", () => {
 const shutdown = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
   
-  // Close HTTP server
   httpServer.close(() => {
     logger.info('HTTP server closed');
+    process.exit(0);
   });
-  
-  // Shutdown tracing SDK if available
-  if (global.tracingSDK) {
-    try {
-      await global.tracingSDK.shutdown();
-      logger.info('Tracing SDK shutdown complete');
-    } catch (error) {
-      logger.error('Error shutting down tracing SDK', { error: error.message });
-    }
-  }
-  
-  process.exit(0);
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));
