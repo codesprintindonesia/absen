@@ -35,13 +35,7 @@ httpServer.use(express.json());
 httpServer.use(express.urlencoded({ extended: false }));
 
 /* IMPORTANT: Request Logger Middleware - harus di awal */
-httpServer.use(requestLoggerMiddleware);
-
-/* IMPORTANT: Tracing Middleware (jika enabled) */
-if (process.env.SIGNOZ_ENABLED === 'true') {
-  httpServer.use(tracingMiddleware);
-  logger.info('Tracing middleware enabled');
-}
+httpServer.use(requestLoggerMiddleware); 
 
 /* Swagger Documentation */
 try {
