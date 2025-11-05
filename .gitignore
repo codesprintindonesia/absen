@@ -21,6 +21,8 @@ out/
 .env.production.local
 .env.example
 
+.pem
+
 # IDE and Editor files
 .vscode/
 .idea/
