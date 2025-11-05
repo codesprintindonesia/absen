@@ -6,7 +6,7 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 
 const LOG_ROOT = process.env.LOG_ROOT || 'logs';
 const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
-const MAX_SIZE = process.env.LOG_MAX_SIZE || '10m';
+const MAX_SIZE = process.env.LOG_FILE_MAX_SIZE || '10m';
 
 // pastikan folder logs ada
 fs.mkdirSync(LOG_ROOT, { recursive: true });

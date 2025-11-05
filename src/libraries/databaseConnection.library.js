@@ -69,7 +69,7 @@ export default class Database {
           host: config.dbHost,
           port: config.dbPort,
           dialect: config.dbDialect,
-          timezone: process.env.DB_TIMEZONE || config.timezone || "+07:00",
+          timezone: process.env.DB_TIMEZONE || config.timezone || "+08:00",
           pool: {
             max: process.env.DB_POOL_MAX
               ? Number(process.env.DB_POOL_MAX)

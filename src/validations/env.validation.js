@@ -29,6 +29,13 @@ export const envSchema = Joi.object({
   DB_POOL_IDLE: Joi.number().integer().min(0),
   DB_POOL_EVICT: Joi.number().integer().min(0),
 
+  // Logging configuration
+  LOG_ROOT: Joi.string().default("logs"),
+  LOG_LEVEL: Joi.string()
+    .valid("error", "warn", "info", "http", "verbose", "debug", "silly")
+    .default("info"),
+  LOG_FILE_MAXSIZE: Joi.string().default("10m"),
+
   // Signoz Configuration
   SIGNOZ_ENABLED: Joi.boolean().default(false),
   SIGNOZ_OTLP_ENDPOINT: Joi.string().when("SIGNOZ_ENABLED", {
