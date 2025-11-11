@@ -34,6 +34,12 @@ function decryptData(encryptedData) {
 
 const aesMiddleware = () => {
   return (req, res, next) => {
+    // RULE 1: Skip untuk method yang tidak memiliki body
+    const methodsWithoutBody = ["GET", "DELETE", "HEAD", "OPTIONS"];
+    if (methodsWithoutBody.includes(req.method)) {
+      return next();
+    }
+
     try {
       /* cek jika aes encryption adalah true dan encriptData tidak ada */
       if (process.env.AES_ENCRYPTION == "TRUE" && !req.body.encryptedData) {
@@ -45,24 +51,20 @@ const aesMiddleware = () => {
         );
       }
 
-      if (req.method !== `GET`) {
-        console.log("MASUK");
-        const { encryptedData } = req.body; 
+      const { encryptedData } = req.body;
 
-        if (!encryptedData && req.method != "GET") {
-          throw new Error("encryptedData tidak ditemukan");
-        }
-
-        const afterDecrypt = decryptData(encryptedData);
-
-        console.log("Setelah Decrypt ", afterDecrypt);
-        console.log(`----------------------------`);
-
-        req.body = afterDecrypt; /* Jika berhasil decrypt, timpa req.body */ 
+      if (!encryptedData) {
+        throw new Error("encryptedData tidak ditemukan");
       }
 
+      const afterDecrypt = decryptData(encryptedData);
+
+      console.log("Setelah Decrypt ", afterDecrypt);
+      console.log(`----------------------------`);
+
+      req.body = afterDecrypt; /* Jika berhasil decrypt, timpa req.body */
+
       next(); /* lanjutkan proses */
-      
     } catch (error) {
       console.log(error.message);
       logger.error("AES Decryption failed", { error: error.message });

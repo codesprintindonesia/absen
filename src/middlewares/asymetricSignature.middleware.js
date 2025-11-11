@@ -40,7 +40,6 @@ const asymetricSignatureMiddleware = () => {
       const hexEncode = Buffer.from(hashDigest, "utf8").toString("hex");
       const lowerCase = hexEncode.toLowerCase();
 
-
       const stringToSign = `${httpMethod}:${endpointUrl}:${lowerCase}:${timeStamp}`;
       console.log(`stringToSign AWAL`, stringToSign);
 
@@ -78,7 +77,6 @@ const asymetricSignatureMiddleware = () => {
       if (decryptedData.toString() !== stringToSign) {
         console.log(decryptedData.toString());
         console.log(stringToSign);
-        httpCode = 400;
         throw new Error(
           "Service Cuti - Signature tidak sesuai"
         ); /*Signature tidak sesuai */

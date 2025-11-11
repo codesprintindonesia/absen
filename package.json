@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/codesprintindonesia/absensi#readme",
   "dependencies": {
+    "axios": "^1.13.2",
     "chalk": "^5.6.0",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",

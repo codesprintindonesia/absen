@@ -1,7 +1,7 @@
 // src/services/transactional/shiftHarianPegawai/getByRange.service.js
 
 import findByRange from "../../../repositories/transactional/shiftHarianPegawai/findByRange.repository.js";
-//import logger from "../../../utils/logger.utils.js";
+import logger from "../../../libraries/logger.library.js";
 
 /**
  * Get shift harian untuk rentang tanggal
