@@ -6,10 +6,7 @@ import "../models/associations.model.js";
 import mainRoutes from "../routes/main.route.js";
 import { requestLoggerMiddleware } from "../middlewares/requestLogger.middleware.js";
 import logger from "../libraries/logger.library.js";
-import swaggerUi from "swagger-ui-express";
-import fs from "node:fs";
-import path from "node:path";
-import yaml from "yaml";
+import { specs, swaggerUi } from "../configs/swagger.config.js";
 import aesMiddleware from "../middlewares/aes.middleware.js";
 import asymetricSignatureMiddleware from "../middlewares/asymetricSignature.middleware.js";
 import aesRoutes from "../routes/aes.route.js";
@@ -59,21 +56,16 @@ if (aes === "TRUE") {
 /* IMPORTANT: Request Logger Middleware - harus di awal */
 httpServer.use(requestLoggerMiddleware);
 
-/* Swagger Documentation */
-try {
-  const openapiPath = path.resolve("openapi-absensi.yaml");
-  const swaggerDoc = yaml.parse(fs.readFileSync(openapiPath, "utf8"));
-  httpServer.use(
-    "/docs",
-    swaggerUi.serve,
-    swaggerUi.setup(swaggerDoc, { explorer: true })
-  );
-  logger.info("Swagger documentation mounted at /docs");
-} catch (error) {
-  logger.warn("Swagger documentation not available", {
-    error: error.message,
-  });
-}
+/* Swagger Documentation - Auto-generated from JSDoc */
+httpServer.use(
+  "/docs",
+  swaggerUi.serve,
+  swaggerUi.setup(specs, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+  })
+);
+logger.info("Swagger documentation mounted at /docs (auto-generated)");
 
 /* Routes */
 httpServer.use("/api", mainRoutes);
