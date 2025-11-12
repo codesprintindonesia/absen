@@ -15,9 +15,9 @@ const baseFields = {
   id_personal: Joi.string().max(20).trim().allow(null),
 };
 
-// validasi create
+// validasi create: ID akan di-generate otomatis oleh backend dengan format LKP-{id_pegawai}-{8 digits}
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

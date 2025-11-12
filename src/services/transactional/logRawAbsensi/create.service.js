@@ -1,4 +1,5 @@
 import createRepository from "../../../repositories/transactional/logRawAbsensi/create.repository.js";
+import { generateLogRawAbsensiId } from "../../../utils/idGenerator.util.js";
 
 /**
  * Create new log raw absensi
@@ -11,8 +12,17 @@ import createRepository from "../../../repositories/transactional/logRawAbsensi/
  * @returns {Promise<Object>} Created log raw absensi record
  */
 const createService = async (data) => {
+  // Generate ID otomatis dengan format LOG-{id_pegawai}-{timestamp}
+  const waktuLog = new Date(data.waktu_log);
+  const generatedId = generateLogRawAbsensiId(data.id_pegawai, waktuLog);
+
+  const logRawAbsensiData = {
+    ...data,
+    id: generatedId, // Auto-generated ID
+  };
+
   // validasi bisnis ringan bisa diletakkan di sini bila perlu
-  return await createRepository(data);
+  return await createRepository(logRawAbsensiData);
 };
 
 export default createService;

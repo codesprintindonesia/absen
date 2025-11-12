@@ -14,8 +14,9 @@ const baseFields = {
   offset_rotasi_hari: Joi.number().integer().min(0).optional(),
 };
 
+// validasi create: ID akan di-generate otomatis oleh backend dengan format SHP-{id_pegawai}-{6 digits}
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 }).custom((value, helpers) => {
   if (!value.id_shift_kerja && !value.id_shift_group) {

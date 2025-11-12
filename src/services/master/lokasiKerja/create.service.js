@@ -1,6 +1,7 @@
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 import createRepository from "../../../repositories/master/lokasiKerja/create.repository.js";
 import findByKodeReferensiAndType from "../../../repositories/master/lokasiKerja/findByKodeReferensiAndType.repository.js";
+import { generateMasterId, ID_PREFIX } from "../../../utils/idGenerator.util.js";
 
 /**
  * Business logic untuk create lokasi kerja
@@ -22,9 +23,13 @@ const create = async (data) => {
     throw error;
   }
 
+  // Generate ID otomatis dengan format LOK-NNN
+  const generatedId = generateMasterId(ID_PREFIX.LOKASI_KERJA);
+
   // Transform data dengan business rules
   const locationData = {
     ...data,
+    id: generatedId, // Auto-generated ID
     is_active: data.is_active !== undefined ? data.is_active : true,
     radius: data.radius || getDefaultRadius(data.type_lokasi),
   };

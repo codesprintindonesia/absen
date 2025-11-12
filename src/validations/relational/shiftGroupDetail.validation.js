@@ -10,9 +10,9 @@ const baseFields = {
   id_shift_kerja: Joi.string().max(8).trim().required(),  
 };
 
-// validasi create
+// validasi create: ID akan di-generate otomatis oleh backend dengan format SGD-{9 digits}
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

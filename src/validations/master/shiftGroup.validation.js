@@ -19,10 +19,9 @@ const baseFields = {
   is_active: Joi.boolean().optional(),
 };
 
-// VALIDASI CREATE
-// id wajib dikirim, semua baseFields valid
+// VALIDASI CREATE: ID akan di-generate otomatis oleh backend dengan format SGP-NNN
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

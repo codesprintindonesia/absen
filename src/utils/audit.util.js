@@ -6,21 +6,13 @@
 import logInsertService from "../services/system/auditLog/logInsert.service.js";
 import logUpdateService from "../services/system/auditLog/logUpdate.service.js";
 import logDeleteService from "../services/system/auditLog/logDelete.service.js";
-import { nanoid } from "nanoid";
+import { generateAuditLogId } from "./idGenerator.util.js";
 
 /**
  * Generate unique audit ID
  */
 export const generateAuditId = () => {
-  const now = new Date();
-
-  // Ambil 2 digit terakhir tahun, lalu bulan dan tanggal
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-
-  const dateStr = `${year}${month}${day}`;
-  return `AUD-${dateStr}-${nanoid(5)}`;
+  return generateAuditLogId();
 };
 
 /**

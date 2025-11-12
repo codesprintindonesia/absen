@@ -1,11 +1,15 @@
 // src/services/transactional/absensiHarian/rekonsiliasi.service.js
 
 import * as rekonRepo from '../../../repositories/transactional/absensiHarian/rekonsiliasi.repository.js';
-import { 
-  createTransaction, 
-  commitTransaction, 
-  rollbackTransaction 
+import {
+  createTransaction,
+  commitTransaction,
+  rollbackTransaction
 } from '../../../libraries/transaction.library.js';
+import {
+  generateAbsensiHarianId,
+  generateProsesHarianId,
+} from '../../../utils/idGenerator.util.js';
 
 /**
  * Helper: Extract time from datetime string
@@ -48,19 +52,18 @@ const formatTanggal = (tanggal) => {
 
 /**
  * Helper: Generate ID Absensi
+ * Menggunakan centralized utility dari idGenerator.util.js
  */
 const generateAbsensiId = (idPegawai, tanggal) => {
-  const dateStr = formatTanggal(tanggal);
-  return `ABS-${idPegawai}-${dateStr}`;
+  return generateAbsensiHarianId(idPegawai, tanggal);
 };
 
 /**
  * Helper: Generate ID Proses
+ * Menggunakan centralized utility dari idGenerator.util.js
  */
 const generateIdProses = (tanggal) => {
-  const dateStr = formatTanggal(tanggal);
-  const timestamp = Date.now().toString().slice(-6); // ambil 6 digit terakhir dari timestamp
-  return `PRC-${dateStr}-${timestamp}`;
+  return generateProsesHarianId(tanggal);
 };
 
 

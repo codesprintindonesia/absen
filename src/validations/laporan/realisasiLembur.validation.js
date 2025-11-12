@@ -23,9 +23,9 @@ const baseFields = {
   nama_jabatan_detail: Joi.string().max(255).trim().allow(null).optional(),
 };
 
-// CREATE validation
+// CREATE validation: ID akan di-generate otomatis oleh backend dengan format LBR-{id_pegawai}-{YYYYMM}
 const createSchema = Joi.object({
-  id: Joi.string().max(20).trim().required(),
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

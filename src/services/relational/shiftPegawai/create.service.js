@@ -1,6 +1,7 @@
 import createRepository from "../../../repositories/relational/shiftPegawai/create.repository.js";
 import findOverlapActiveRepository from "../../../repositories/relational/shiftPegawai/findOverlapActive.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
+import { generateShiftPegawaiId } from "../../../utils/idGenerator.util.js";
 
 /**
  * Business logic untuk create shift pegawai dengan validasi overlap
@@ -42,7 +43,15 @@ const createService = async (data) => {
     }
   }
 
-  return await createRepository(data);
+  // Generate ID otomatis dengan format SHP-{id_pegawai}-{6 digits}
+  const generatedId = generateShiftPegawaiId(data.id_pegawai);
+
+  const shiftPegawaiData = {
+    ...data,
+    id: generatedId, // Auto-generated ID
+  };
+
+  return await createRepository(shiftPegawaiData);
 };
 
 export default createService;

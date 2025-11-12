@@ -25,9 +25,9 @@ const baseFields = {
   is_active: Joi.boolean().optional(),
 };
 
-// CREATE
+// CREATE: ID akan di-generate otomatis oleh backend dengan format SFT-NNN
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

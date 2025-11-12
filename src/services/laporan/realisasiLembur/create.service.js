@@ -1,6 +1,7 @@
 // src/services/laporan/realisasiLembur/create.service.js
 
 import createRepository from "../../../repositories/laporan/realisasiLembur/create.repository.js";
+import { generateRealisasiLemburId } from "../../../utils/idGenerator.util.js";
 
 /**
  * Create new realisasi lembur record
@@ -15,7 +16,16 @@ import createRepository from "../../../repositories/laporan/realisasiLembur/crea
  * @returns {Promise<Object>} Created realisasi lembur record
  */
 const createService = async (data) => {
-  return await createRepository(data);
+  // Generate ID otomatis dengan format LBR-{id_pegawai}-{YYYYMM}
+  const periodeBulan = new Date(data.periode_bulan_lembur).toISOString().substring(0, 7); // YYYY-MM
+  const generatedId = generateRealisasiLemburId(data.id_pegawai, periodeBulan);
+
+  const realisasiLemburData = {
+    ...data,
+    id: generatedId, // Auto-generated ID
+  };
+
+  return await createRepository(realisasiLemburData);
 };
 
 export default createService;

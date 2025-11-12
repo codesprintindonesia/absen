@@ -31,8 +31,9 @@ const baseFields = {
     .required(),
 };
 
+// CREATE validation: ID akan di-generate otomatis oleh backend dengan format LOG-{id_pegawai}-{timestamp}
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

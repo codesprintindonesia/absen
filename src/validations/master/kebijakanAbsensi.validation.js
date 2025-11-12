@@ -50,9 +50,9 @@ const baseFields = {
   is_active: Joi.boolean().optional(), // default true
 };
 
-// CREATE: id wajib (+ base)
+// CREATE: ID akan di-generate otomatis oleh backend dengan format KEB-NNN
 const createSchema = Joi.object({
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated
   ...baseFields,
 });
 

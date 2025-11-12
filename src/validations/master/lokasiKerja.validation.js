@@ -19,10 +19,10 @@ const baseFields = {
   nama_cabang_induk: Joi.string().max(100).allow(null, "").optional(),
 };
 
-// CREATE validation
+// CREATE validation - ID akan di-generate otomatis oleh backend
 const createSchema = Joi.object({
   ...baseFields,
-  id: idSchema,
+  // id dihapus dari required fields - akan auto-generated dengan format LOK-NNN
 });
 
 // UPDATE validation
