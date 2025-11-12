@@ -7,7 +7,7 @@ const sequelize = await getSequelize();
 
 const ShiftKerja = sequelize.define('m_shift_kerja', {
   id: {
-    type: DataTypes.STRING(8),
+    type: DataTypes.STRING(10),
     allowNull: false,
     primaryKey: true,
   }, 

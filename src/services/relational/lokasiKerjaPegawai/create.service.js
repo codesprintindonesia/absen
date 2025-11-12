@@ -9,12 +9,15 @@ import { generateLokasiKerjaPegawaiId } from "../../../utils/idGenerator.util.js
  * @returns {Promise<Object>} Data lokasi kerja pegawai yang baru dibuat
  */
 const createService = async (data) => {
-  // Generate ID otomatis dengan format LKP-{id_pegawai}-{8 digits}
-  const generatedId = generateLokasiKerjaPegawaiId(data.id_pegawai);
+  // Generate ID otomatis dengan format LKP-{id_pegawai}-{id_lokasi_kerja}-{random}
+  const generatedId = generateLokasiKerjaPegawaiId(
+    data.id_pegawai,
+    data.id_lokasi_kerja
+  );
 
   const lokasiKerjaPegawaiData = {
     ...data,
-    id: generatedId, // Auto-generated ID
+    id: generatedId, // Auto-generated context-rich ID
   };
 
   // jalankan insert ke database

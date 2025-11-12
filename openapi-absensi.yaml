@@ -276,6 +276,7 @@ paths:
       tags:
         - Master - Lokasi Kerja
       summary: Create lokasi kerja
+      description: ID will be auto-generated with format LOK-NNNNNN (alphanumeric, 2.1B combinations)
       requestBody:
         required: true
         content:
@@ -283,15 +284,11 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - kode_referensi
                 - type_lokasi
                 - nama
                 - radius
               properties:
-                id:
-                  type: string
-                  maxLength: 8
                 kode_referensi:
                   type: string
                   maxLength: 20
@@ -474,6 +471,7 @@ paths:
       tags:
         - Master - Kebijakan Absensi
       summary: Create kebijakan absensi
+      description: ID will be auto-generated with format KEB-NNNNNN (alphanumeric, 2.1B combinations)
       requestBody:
         required: true
         content:
@@ -481,12 +479,8 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - nama
               properties:
-                id:
-                  type: string
-                  maxLength: 8
                 nama:
                   type: string
                   maxLength: 100
@@ -626,6 +620,7 @@ paths:
       tags:
         - Master - Shift Group
       summary: Create shift group
+      description: ID will be auto-generated with format SGP-NNNNNN (alphanumeric, 2.1B combinations)
       requestBody:
         required: true
         content:
@@ -633,12 +628,8 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - nama
               properties:
-                id:
-                  type: string
-                  maxLength: 8
                 nama:
                   type: string
                   maxLength: 100
@@ -723,6 +714,7 @@ paths:
       tags:
         - Master - Shift Kerja
       summary: Create shift kerja
+      description: ID will be auto-generated with format SFT-NNNNNN (alphanumeric, 2.1B combinations)
       requestBody:
         required: true
         content:
@@ -730,15 +722,11 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - nama
                 - jam_masuk
                 - jam_pulang
                 - hari_kerja
               properties:
-                id:
-                  type: string
-                  maxLength: 8
                 nama:
                   type: string
                   maxLength: 50
@@ -987,6 +975,7 @@ paths:
       tags:
         - Relational - Shift Group Detail
       summary: Create shift group detail
+      description: ID will be auto-generated with format SGD-{id_shift_group}-{id_shift_kerja}-NNNN (context-rich, self-documenting)
       requestBody:
         required: true
         content:
@@ -994,13 +983,9 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - id_shift_group
                 - id_shift_kerja
               properties:
-                id:
-                  type: string
-                  maxLength: 12
                 id_shift_group:
                   type: string
                   maxLength: 8
@@ -1084,6 +1069,7 @@ paths:
       tags:
         - Relational - Shift Pegawai
       summary: Create shift pegawai
+      description: ID will be auto-generated with format SHP-{id_pegawai}-{id_shift}-NNNN (context-rich, self-documenting)
       requestBody:
         required: true
         content:
@@ -1091,15 +1077,11 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - id_pegawai
                 - tanggal_mulai
                 - id_personal
                 - nama_pegawai
               properties:
-                id:
-                  type: string
-                  maxLength: 20
                 id_pegawai:
                   type: string
                   maxLength: 10
@@ -1238,6 +1220,7 @@ paths:
       tags:
         - Relational - Lokasi Kerja Pegawai
       summary: Create lokasi kerja pegawai
+      description: ID will be auto-generated with format LKP-{id_pegawai}-{id_lokasi_kerja}-NNNN (context-rich, self-documenting)
       requestBody:
         required: true
         content:
@@ -1245,14 +1228,10 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - id_pegawai
                 - id_lokasi_kerja
                 - tanggal_mulai_berlaku
               properties:
-                id:
-                  type: string
-                  maxLength: 25
                 id_pegawai:
                   type: string
                 id_lokasi_kerja:
@@ -1392,7 +1371,9 @@ paths:
       tags:
         - Transactional - Log Raw Absensi
       summary: Create log raw absensi (Clock in/out)
-      description: Endpoint untuk mencatat clock in/out dari mesin atau smartphone
+      description: |
+        Endpoint untuk mencatat clock in/out dari mesin atau smartphone.
+        ID will be auto-generated with format LOG-{id_pegawai}-{timestamp}
       requestBody:
         required: true
         content:
@@ -1400,14 +1381,10 @@ paths:
             schema:
               type: object
               required:
-                - id
                 - id_pegawai
                 - waktu_log
                 - source_absensi
               properties:
-                id:
-                  type: string
-                  maxLength: 25
                 id_pegawai:
                   type: string
                   maxLength: 10
@@ -1925,9 +1902,57 @@ paths:
       tags:
         - Laporan - Realisasi Lembur
       summary: Create realisasi lembur manual
+      description: ID will be auto-generated with format LBR-{id_pegawai}-{YYYYMM}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_pegawai
+                - periode_bulan_lembur
+                - total_jam_lembur_bulanan
+              properties:
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                periode_bulan_lembur:
+                  type: string
+                  format: date
+                  example: "2025-01-01"
+                total_jam_lembur_bulanan:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                total_hari_terlambat_bulanan:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                rata_menit_keterlambatan:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  default: 0
+                total_hari_tidak_hadir:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                total_hari_kerja_efektif:
+                  type: integer
+                  minimum: 0
+                  default: 0
+                persentase_kehadiran:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  maximum: 100
+                  default: 0
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /realisasi-lembur/generate:
     post:

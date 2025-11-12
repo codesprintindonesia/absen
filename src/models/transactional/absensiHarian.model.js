@@ -36,11 +36,11 @@ const AbsensiHarian = sequelize.define(
       allowNull: false,
     },
     id_shift_kerja: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
     },
     id_lokasi_kerja_digunakan: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: true,
     },
     jam_masuk_jadwal: {
@@ -124,7 +124,7 @@ const AbsensiHarian = sequelize.define(
       defaultValue: false,
     },
     id_kebijakan_absensi: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
     },
     catatan_khusus: {

@@ -40,7 +40,7 @@ const LogRawAbsensi = sequelize.define(
       comment: "Lintang; Bujur (jika dari Smartphone)"
     },
     id_lokasi_kerja: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: true,
       references: {
         model: "m_lokasi_kerja",

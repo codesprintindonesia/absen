@@ -8,7 +8,7 @@ const ShiftPegawai = sequelize.define(
   "ShiftPegawai",
   {
     id: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(40),
       allowNull: false,
       primaryKey: true,
     },
@@ -17,11 +17,11 @@ const ShiftPegawai = sequelize.define(
       allowNull: false,
     },
     id_shift_kerja: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: true,
     },
     id_shift_group: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: true,
     },
     tanggal_mulai: {

@@ -1,0 +1,59 @@
+=================================================================
+MANUAL UPDATE INSTRUCTIONS FOR SEQUELIZE MODELS
+=================================================================
+
+Silakan update file-file berikut secara manual atau jalankan migration database terlebih dahulu:
+
+====================
+MASTER TABLES - Change STRING(8) to STRING(10)
+====================
+
+1. src/models/master/lokasiKerja.model.js
+   Line 15: type: DataTypes.STRING(8) → STRING(10)
+
+2. src/models/master/kebijakanAbsensi.model.js
+   Line 13: type: DataTypes.STRING(8) → STRING(10)
+
+3. src/models/master/shiftKerja.model.js
+   Line 10: type: DataTypes.STRING(8) → STRING(10)
+
+4. src/models/master/shiftGroup.model.js
+   Line 13: type: DataTypes.STRING(8) → STRING(10)
+
+====================
+RELATIONAL TABLES - Foreign Key Updates
+====================
+
+5. src/models/relational/lokasiKerjaPegawai.model.js
+   Line 22: id_lokasi_kerja: DataTypes.STRING(8) → STRING(10)
+
+6. src/models/relational/shiftPegawai.model.js
+   Line 20: id_shift_kerja: DataTypes.STRING(8) → STRING(10)
+   Line 24: id_shift_group: DataTypes.STRING(8) → STRING(10)
+
+7. src/models/relational/shiftGroupDetail.model.js
+   Line 18: id_shift_group: DataTypes.STRING(8) → STRING(10)
+   Line 22: id_shift_kerja: DataTypes.STRING(8) → STRING(10)
+
+====================
+TRANSACTIONAL TABLES - Foreign Key Updates
+====================
+
+8. src/models/transactional/shiftHarianPegawai.model.js
+   Line 24: id_shift_kerja_jadwal: DataTypes.STRING(8) → STRING(10)
+   Line 29: id_shift_kerja_aktual: DataTypes.STRING(8) → STRING(10)
+   Line 39: id_lokasi_kerja_aktual: DataTypes.STRING(8) → STRING(10)
+
+9. src/models/transactional/logRawAbsensi.model.js
+   Line 43: id_lokasi_kerja: DataTypes.STRING(8) → STRING(10)
+
+10. src/models/transactional/absensiHarian.model.js
+    Line 39: id_shift_kerja: DataTypes.STRING(8) → STRING(10)
+    Line 43: id_lokasi_kerja_digunakan: DataTypes.STRING(8) → STRING(10)
+    Line 127: id_kebijakan_absensi: DataTypes.STRING(8) → STRING(10)
+
+=================================================================
+SUMMARY:
+- 4 Master table IDs: STRING(8) → STRING(10)
+- 10 Foreign key columns need update to STRING(10)
+=================================================================

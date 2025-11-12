@@ -10,7 +10,7 @@ const ShiftGroup = sequelize.define(
   "ShiftGroup",
   {
     id: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       primaryKey: true,
     },

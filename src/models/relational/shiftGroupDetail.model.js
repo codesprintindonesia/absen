@@ -10,16 +10,16 @@ const ShiftGroupDetail = sequelize.define(
   "ShiftGroupDetail",
   {
     id: {
-      type: DataTypes.STRING(12),
+      type: DataTypes.STRING(45),
       allowNull: false,
       primaryKey: true,
     },
     id_shift_group: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
     },
     id_shift_kerja: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
     },
     created_at: {

@@ -10,7 +10,7 @@ const LokasiKerjaPegawai = sequelize.define(
   "LokasiKerjaPegawai",
   {
     id: {
-      type: DataTypes.STRING(25),
+      type: DataTypes.STRING(40),
       allowNull: false,
       primaryKey: true,
     },
@@ -19,7 +19,7 @@ const LokasiKerjaPegawai = sequelize.define(
       allowNull: false,
     },
     id_lokasi_kerja: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
     },
     tanggal_mulai_berlaku: {

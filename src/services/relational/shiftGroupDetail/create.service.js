@@ -7,12 +7,15 @@ import { generateShiftGroupDetailId } from "../../../utils/idGenerator.util.js";
  * @returns {Promise<Object>} Data shift group detail yang baru dibuat
  */
 const createService = async (data) => {
-  // Generate ID otomatis dengan format SGD-{9 digits}
-  const generatedId = generateShiftGroupDetailId();
+  // Generate ID otomatis dengan format SGD-{id_shift_group}-{id_shift_kerja}-{random}
+  const generatedId = generateShiftGroupDetailId(
+    data.id_shift_group,
+    data.id_shift_kerja
+  );
 
   const detailData = {
     ...data,
-    id: generatedId, // Auto-generated ID
+    id: generatedId, // Auto-generated context-rich ID
   };
 
   return await createRepository(detailData);

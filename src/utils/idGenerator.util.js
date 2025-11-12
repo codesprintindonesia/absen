@@ -6,26 +6,29 @@
 import { customAlphabet } from 'nanoid';
 
 /**
- * Generate nanoid dengan karakter angka saja
- * Menghindari karakter yang ambigu seperti 0/O, 1/I/l
+ * Generate nanoid dengan karakter alphanumeric (angka + huruf kapital)
+ * Menggunakan 36 karakter: 0-9, A-Z
+ * Menghindari huruf kecil untuk konsistensi
  */
-const nanoidNumeric = customAlphabet('0123456789', 3);
+const nanoidAlphaNumeric = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 6);
 
 /**
  * Generate ID untuk Master entities
- * Format: {PREFIX}-{NNN} (8 karakter total)
- * Contoh: LOK-001, KEB-002, SFT-003
+ * Format: {PREFIX}-{NNNNNN} (10 karakter total)
+ * Contoh: LOK-A1B2C3, KEB-9X7Y5Z, SFT-123456
+ *
+ * Kapasitas: 36^6 = 2,176,782,336 kombinasi unik
  *
  * @param {string} prefix - 3 huruf prefix (LOK, KEB, SFT, dll)
- * @returns {string} ID dengan format PREFIX-NNN
+ * @returns {string} ID dengan format PREFIX-NNNNNN
  */
 export function generateMasterId(prefix) {
   if (!prefix || prefix.length !== 3) {
     throw new Error('Prefix must be exactly 3 characters');
   }
 
-  const randomNum = nanoidNumeric();
-  return `${prefix.toUpperCase()}-${randomNum}`;
+  const randomStr = nanoidAlphaNumeric();
+  return `${prefix.toUpperCase()}-${randomStr}`;
 }
 
 /**
@@ -34,41 +37,67 @@ export function generateMasterId(prefix) {
  */
 
 /**
- * Shift Group Detail: {PREFIX}-{NNNNNNNNN} (12 karakter)
- * Contoh: SGD-123456789
+ * Shift Group Detail: {PREFIX}-{id_shift_group}-{id_shift_kerja}-{NNNN}
+ * Contoh: SGD-SGP3A1B2C-SFT8B3C2D-X7Y9
+ *
+ * Context-rich ID untuk debugging dan troubleshooting
+ * Length: ~35-40 chars (depends on FK lengths)
+ * Collision risk: Virtually zero (36^4 = 1.6M per group-shift pair)
  */
-export function generateShiftGroupDetailId() {
+export function generateShiftGroupDetailId(idShiftGroup, idShiftKerja) {
+  if (!idShiftGroup) {
+    throw new Error('idShiftGroup is required for generating Shift Group Detail ID');
+  }
+  if (!idShiftKerja) {
+    throw new Error('idShiftKerja is required for generating Shift Group Detail ID');
+  }
+
   const prefix = 'SGD';
-  const randomNum = customAlphabet('0123456789', 9)();
-  return `${prefix}-${randomNum}`;
+  const randomSuffix = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 4)();
+  return `${prefix}-${idShiftGroup}-${idShiftKerja}-${randomSuffix}`;
 }
 
 /**
- * Shift Pegawai: {PREFIX}-{id_pegawai}-{NNNNNN} (20 karakter max)
- * Contoh: SHP-EMP001-123456
+ * Shift Pegawai: {PREFIX}-{id_pegawai}-{id_shift}-{NNNN}
+ * Contoh: SHP-EMP001-SFT8B3C2D-X7Y9
+ *
+ * Context-rich ID untuk debugging dan troubleshooting
+ * Supports either id_shift_kerja OR id_shift_group
+ * Length: ~30-35 chars (depends on FK lengths)
+ * Collision risk: Virtually zero (36^4 = 1.6M per pegawai-shift pair)
  */
-export function generateShiftPegawaiId(idPegawai) {
+export function generateShiftPegawaiId(idPegawai, idShiftOrGroup) {
   if (!idPegawai) {
     throw new Error('idPegawai is required for generating Shift Pegawai ID');
   }
+  if (!idShiftOrGroup) {
+    throw new Error('idShiftKerja or idShiftGroup is required for generating Shift Pegawai ID');
+  }
 
   const prefix = 'SHP';
-  const randomNum = customAlphabet('0123456789', 6)();
-  return `${prefix}-${idPegawai}-${randomNum}`;
+  const randomSuffix = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 4)();
+  return `${prefix}-${idPegawai}-${idShiftOrGroup}-${randomSuffix}`;
 }
 
 /**
- * Lokasi Kerja Pegawai: {PREFIX}-{id_pegawai}-{NNNNNNNN} (25 karakter max)
- * Contoh: LKP-EMP001-12345678
+ * Lokasi Kerja Pegawai: {PREFIX}-{id_pegawai}-{id_lokasi_kerja}-{NNNN}
+ * Contoh: LKP-EMP001-LOK5A7B2C-X7Y9
+ *
+ * Context-rich ID untuk debugging dan troubleshooting
+ * Length: ~30-35 chars (depends on FK lengths)
+ * Collision risk: Virtually zero (36^4 = 1.6M per pegawai-lokasi pair)
  */
-export function generateLokasiKerjaPegawaiId(idPegawai) {
+export function generateLokasiKerjaPegawaiId(idPegawai, idLokasiKerja) {
   if (!idPegawai) {
     throw new Error('idPegawai is required for generating Lokasi Kerja Pegawai ID');
   }
+  if (!idLokasiKerja) {
+    throw new Error('idLokasiKerja is required for generating Lokasi Kerja Pegawai ID');
+  }
 
   const prefix = 'LKP';
-  const randomNum = customAlphabet('0123456789', 8)();
-  return `${prefix}-${idPegawai}-${randomNum}`;
+  const randomSuffix = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 4)();
+  return `${prefix}-${idPegawai}-${idLokasiKerja}-${randomSuffix}`;
 }
 
 /**

@@ -43,12 +43,14 @@ const createService = async (data) => {
     }
   }
 
-  // Generate ID otomatis dengan format SHP-{id_pegawai}-{6 digits}
-  const generatedId = generateShiftPegawaiId(data.id_pegawai);
+  // Generate ID otomatis dengan format SHP-{id_pegawai}-{id_shift}-{random}
+  // Use whichever shift ID is provided (kerja or group)
+  const idShiftOrGroup = data.id_shift_kerja || data.id_shift_group;
+  const generatedId = generateShiftPegawaiId(data.id_pegawai, idShiftOrGroup);
 
   const shiftPegawaiData = {
     ...data,
-    id: generatedId, // Auto-generated ID
+    id: generatedId, // Auto-generated context-rich ID
   };
 
   return await createRepository(shiftPegawaiData);

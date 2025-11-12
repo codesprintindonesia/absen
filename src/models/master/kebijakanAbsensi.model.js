@@ -10,7 +10,7 @@ const KebijakanAbsensi = sequelize.define(
   "m_kebijakan_absensi",
   {
     id: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       primaryKey: true,
     },

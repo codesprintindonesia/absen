@@ -21,12 +21,12 @@ const ShiftHarianPegawai = sequelize.define(
       allowNull: false,
     },
     id_shift_kerja_jadwal: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       comment: "Shift dari jadwal awal"
     },
     id_shift_kerja_aktual: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       comment: "Shift yang digunakan untuk rekonsiliasi"
     },
@@ -36,7 +36,7 @@ const ShiftHarianPegawai = sequelize.define(
       comment: "Lokasi dari jadwal awal"
     },
     id_lokasi_kerja_aktual: {
-      type: DataTypes.STRING(8),
+      type: DataTypes.STRING(10),
       allowNull: false,
       comment: "Lokasi yang digunakan untuk rekonsiliasi"
     },
