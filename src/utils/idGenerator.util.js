@@ -206,8 +206,8 @@ export const ID_PREFIX = {
   // Master
   LOKASI_KERJA: 'LOK',
   KEBIJAKAN_ABSENSI: 'KEB',
-  SHIFT_KERJA: 'SFT',
-  SHIFT_GROUP: 'SGP',
+  SHIFT_KERJA: 'SHK',
+  SHIFT_GROUP: 'SGR',
 
   // Relational
   SHIFT_GROUP_DETAIL: 'SGD',

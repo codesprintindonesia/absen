@@ -23,6 +23,8 @@ out/
 
 .pem
 
+.claude
+
 # IDE and Editor files
 .vscode/
 .idea/
