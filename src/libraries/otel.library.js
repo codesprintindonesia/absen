@@ -174,7 +174,7 @@ class OpenTelemetryService {
             new WinstonInstrumentation({
               enabled: true,
               disableLogCorrelation: false, // Inject trace_id, span_id
-              disableLogSending: false, // CRITICAL: Forward logs ke OTLP
+              disableLogSending: true, // CRITICAL: Forward logs ke OTLP
             }),
           ],
         });

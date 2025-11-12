@@ -30,7 +30,7 @@ export const requestLoggerMiddleware = (req, res, next) => {
   const startTime = process.hrtime.bigint();
 
   // Log incoming request
-  req.log.info("Incoming request", {
+  req.log.info(`Incoming request`, {
     method: req.method,
     url: req.originalUrl || req.url,
     path: req.path,
@@ -51,7 +51,7 @@ export const requestLoggerMiddleware = (req, res, next) => {
     const endTime = process.hrtime.bigint();
     const durationMs = Number(endTime - startTime) / 1e6; // Convert to milliseconds
 
-    req.log.info("Request completed", {
+    req.log.info(`Request completed`, {
       statusCode: res.statusCode,
       durationMs: Math.round(durationMs * 100) / 100, // Round to 2 decimal
       responseBody: res.locals.responseBody,

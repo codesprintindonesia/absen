@@ -18,12 +18,14 @@ info:
     name: Divisi SDM
 
 servers:
-  - url: http://172.16.52.46:5000/api
+  - url: http://localhost:5000/api
     description: Development Server
 
 tags:
   - name: System
     description: Health check & database operations
+  - name: System - Audit Log
+    description: Audit log tracking and history
   - name: Master - Lokasi Kerja
   - name: Master - Kebijakan Absensi
   - name: Master - Shift Group
@@ -170,6 +172,78 @@ paths:
           description: Internal Server Error
 
   # ============================================
+  # SYSTEM - AUDIT LOG
+  # ============================================
+  /audit-logs:
+    get:
+      tags:
+        - System - Audit Log
+      summary: Get all audit logs
+      description: Get audit logs with filtering and pagination
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - name: nama_tabel
+          in: query
+          schema:
+            type: string
+          description: Filter by table name
+        - name: id_record
+          in: query
+          schema:
+            type: string
+          description: Filter by record ID
+        - name: jenis_aksi
+          in: query
+          schema:
+            type: string
+            enum: [INSERT, UPDATE, DELETE]
+          description: Filter by action type
+        - name: id_user_pelaku
+          in: query
+          schema:
+            type: string
+          description: Filter by user ID who performed the action
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter audit logs from this date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter audit logs until this date
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+
+  /audit-logs/history/{tableName}/{recordId}:
+    get:
+      tags:
+        - System - Audit Log
+      summary: Get audit history for specific record
+      description: Get complete audit trail history for a specific record
+      parameters:
+        - name: tableName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the table
+        - name: recordId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID of the record
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessListResponse'
+
+  # ============================================
   # MASTER - LOKASI KERJA
   # ============================================
   /lokasi-kerja:
@@ -263,7 +337,9 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     put:
       tags:
         - Master - Lokasi Kerja
@@ -280,33 +356,89 @@ paths:
               properties:
                 kode_referensi:
                   type: string
+                  maxLength: 20
                 type_lokasi:
                   type: string
+                  enum: [CABANG, KANTOR_PUSAT, KANTOR_KAS, UNIT_LAYANAN, CASH_CENTER, LOKASI_KHUSUS]
                 nama:
                   type: string
+                  maxLength: 100
                 alamat:
                   type: string
+                  nullable: true
                 latitude:
                   type: number
+                  minimum: -90
+                  maximum: 90
                 longitude:
                   type: number
+                  minimum: -180
+                  maximum: 180
                 radius:
                   type: integer
+                  minimum: 1
+                  maximum: 1000
                 is_active:
                   type: boolean
+                keterangan:
+                  type: string
+                  nullable: true
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     delete:
       tags:
         - Master - Lokasi Kerja
       summary: Delete lokasi kerja
+      description: Hard delete lokasi kerja record
       parameters:
         - $ref: '#/components/parameters/IdParam'
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
+  /lokasi-kerja/{id}/delete-impact:
+    get:
+      tags:
+        - Master - Lokasi Kerja
+      summary: Check delete impact analysis
+      description: Analyze the impact of deleting a lokasi kerja record
+      parameters:
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Impact analysis result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "Delete impact analysis"
+                  data:
+                    type: object
+                    properties:
+                      canDelete:
+                        type: boolean
+                      relatedRecords:
+                        type: object
+                        description: Count of related records in other tables
+                  metadata:
+                    type: object
+                    nullable: true
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   # ============================================
   # MASTER - KEBIJAKAN ABSENSI
@@ -319,17 +451,82 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: is_default
+          in: query
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          schema:
+            type: string
+            maxLength: 100
       responses:
         '200':
           $ref: '#/components/responses/SuccessListResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
     post:
       tags:
         - Master - Kebijakan Absensi
       summary: Create kebijakan absensi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - nama
+              properties:
+                id:
+                  type: string
+                  maxLength: 8
+                nama:
+                  type: string
+                  maxLength: 100
+                toleransi_keterlambatan:
+                  type: integer
+                  minimum: 0
+                  default: 15
+                  description: Dalam menit
+                min_jam_kerja_full_day:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                  maximum: 99.99
+                  default: 8.00
+                  description: Minimum jam kerja untuk dianggap full day
+                aturan_potongan_terlambat:
+                  type: object
+                  nullable: true
+                  description: JSON object untuk aturan potongan keterlambatan
+                kebijakan_lembur_otomatis:
+                  type: object
+                  nullable: true
+                  description: JSON object untuk kebijakan lembur otomatis
+                jam_cut_off_hari:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                  default: "23:59:59"
+                  example: "23:59:59"
+                  description: Format HH:mm:ss
+                is_default:
+                  type: boolean
+                  default: false
+                is_active:
+                  type: boolean
+                  default: true
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /kebijakan-absensi/{id}:
     get:
@@ -341,17 +538,55 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     put:
       tags:
         - Master - Kebijakan Absensi
       summary: Update kebijakan absensi
       parameters:
         - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                nama:
+                  type: string
+                  maxLength: 100
+                toleransi_keterlambatan:
+                  type: integer
+                  minimum: 0
+                min_jam_kerja_full_day:
+                  type: number
+                  format: decimal
+                  minimum: 0.01
+                  maximum: 99.99
+                aturan_potongan_terlambat:
+                  type: object
+                  nullable: true
+                kebijakan_lembur_otomatis:
+                  type: object
+                  nullable: true
+                jam_cut_off_hari:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                is_default:
+                  type: boolean
+                is_active:
+                  type: boolean
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     delete:
       tags:
         - Master - Kebijakan Absensi
@@ -361,6 +596,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   # ============================================
   # MASTER - SHIFT GROUP
@@ -466,21 +703,87 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
-        - name: search
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+        - name: q
           in: query
           schema:
             type: string
+            maxLength: 100
+          description: Search query
       responses:
         '200':
           $ref: '#/components/responses/SuccessListResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
     post:
       tags:
         - Master - Shift Kerja
       summary: Create shift kerja
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - nama
+                - jam_masuk
+                - jam_pulang
+                - hari_kerja
+              properties:
+                id:
+                  type: string
+                  maxLength: 8
+                nama:
+                  type: string
+                  maxLength: 50
+                  example: "Shift Pagi"
+                jam_masuk:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                  example: "08:00:00"
+                  description: Format HH:mm:ss
+                jam_pulang:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                  example: "17:00:00"
+                  description: Format HH:mm:ss
+                durasi_istirahat:
+                  type: integer
+                  minimum: 0
+                  maximum: 240
+                  description: Durasi istirahat dalam menit
+                hari_kerja:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: integer
+                        minimum: 1
+                        maximum: 7
+                      description: Array angka 1-7 (1=Senin, 7=Minggu)
+                    - type: object
+                      description: JSON object untuk hari kerja kustom
+                  example: [1, 2, 3, 4, 5]
+                toleransi_keterlambatan:
+                  type: integer
+                  minimum: 0
+                  description: Toleransi keterlambatan dalam menit
+                keterangan:
+                  type: string
+                  nullable: true
+                is_active:
+                  type: boolean
+                  default: true
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /shift-kerja/{id}:
     get:
@@ -492,17 +795,60 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     put:
       tags:
         - Master - Shift Kerja
       summary: Update shift kerja
       parameters:
         - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                nama:
+                  type: string
+                  maxLength: 50
+                jam_masuk:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                jam_pulang:
+                  type: string
+                  pattern: '^(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d$'
+                durasi_istirahat:
+                  type: integer
+                  minimum: 0
+                  maximum: 240
+                hari_kerja:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: integer
+                        minimum: 1
+                        maximum: 7
+                    - type: object
+                toleransi_keterlambatan:
+                  type: integer
+                  minimum: 0
+                keterangan:
+                  type: string
+                  nullable: true
+                is_active:
+                  type: boolean
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     delete:
       tags:
         - Master - Shift Kerja
@@ -512,6 +858,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   # ============================================
   # MASTER - HARI LIBUR
@@ -976,18 +1324,162 @@ paths:
       parameters:
         - $ref: '#/components/parameters/PageParam'
         - $ref: '#/components/parameters/LimitParam'
+        - name: id_pegawai
+          in: query
+          schema:
+            type: string
+            maxLength: 10
+        - name: id_lokasi_kerja
+          in: query
+          schema:
+            type: string
+            maxLength: 8
+        - name: source_absensi
+          in: query
+          schema:
+            type: string
+            enum: [MESIN_FINGERPRINT, SMARTPHONE_APP, WEB_PORTAL, QR_CODE, FACE_RECOGNITION, MANUAL_ENTRY]
+        - name: status_validasi
+          in: query
+          schema:
+            type: string
+            enum: [VALID, INVALID, PENDING, DUPLICATE]
+        - name: waktu_log_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter waktu log dari timestamp ini
+        - name: waktu_log_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter waktu log sampai timestamp ini
+        - name: tanggal_from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter tanggal dari (berdasarkan DATE(waktu_log))
+        - name: tanggal_to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter tanggal sampai (berdasarkan DATE(waktu_log))
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Advanced search across multiple fields
+        - name: search_fields
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [keterangan_log, qr_hash, id_device, koordinat_gps, nama_pegawai, kode_cabang, nama_cabang, nama_jabatan_detail, source_absensi, status_validasi]
+            maxItems: 10
+          description: Fields to search in (used with search parameter)
       responses:
         '200':
           $ref: '#/components/responses/SuccessListResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
     post:
       tags:
         - Transactional - Log Raw Absensi
       summary: Create log raw absensi (Clock in/out)
       description: Endpoint untuk mencatat clock in/out dari mesin atau smartphone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+                - id_pegawai
+                - waktu_log
+                - source_absensi
+              properties:
+                id:
+                  type: string
+                  maxLength: 25
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                waktu_log:
+                  type: string
+                  format: date-time
+                  example: "2025-01-21T08:30:00Z"
+                id_device:
+                  type: string
+                  maxLength: 50
+                  nullable: true
+                koordinat_gps:
+                  type: string
+                  maxLength: 50
+                  nullable: true
+                  example: "-5.135399,119.423790"
+                id_lokasi_kerja:
+                  type: string
+                  maxLength: 8
+                  nullable: true
+                is_validasi_geofence:
+                  type: boolean
+                  default: false
+                jarak_dari_lokasi:
+                  type: number
+                  format: decimal
+                  nullable: true
+                  description: Jarak dalam meter
+                akurasi_gps:
+                  type: number
+                  format: decimal
+                  nullable: true
+                  description: Akurasi GPS dalam meter
+                path_bukti_foto:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                qr_hash:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                keterangan_log:
+                  type: string
+                  nullable: true
+                status_validasi:
+                  type: string
+                  enum: [VALID, INVALID, PENDING, DUPLICATE]
+                  default: VALID
+                nama_pegawai:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                kode_cabang:
+                  type: string
+                  maxLength: 5
+                  nullable: true
+                nama_cabang:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                nama_jabatan_detail:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                source_absensi:
+                  type: string
+                  enum: [MESIN_FINGERPRINT, SMARTPHONE_APP, WEB_PORTAL, QR_CODE, FACE_RECOGNITION, MANUAL_ENTRY]
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /log-raw-absensi/{id}:
     get:
@@ -995,30 +1487,122 @@ paths:
         - Transactional - Log Raw Absensi
       summary: Get log raw absensi by ID
       parameters:
-        - $ref: '#/components/parameters/IdParam'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 25
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     put:
       tags:
         - Transactional - Log Raw Absensi
       summary: Update log raw absensi
       parameters:
-        - $ref: '#/components/parameters/IdParam'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 25
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                waktu_log:
+                  type: string
+                  format: date-time
+                id_device:
+                  type: string
+                  maxLength: 50
+                  nullable: true
+                koordinat_gps:
+                  type: string
+                  maxLength: 50
+                  nullable: true
+                id_lokasi_kerja:
+                  type: string
+                  maxLength: 8
+                  nullable: true
+                is_validasi_geofence:
+                  type: boolean
+                jarak_dari_lokasi:
+                  type: number
+                  format: decimal
+                  nullable: true
+                akurasi_gps:
+                  type: number
+                  format: decimal
+                  nullable: true
+                path_bukti_foto:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                qr_hash:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                keterangan_log:
+                  type: string
+                  nullable: true
+                status_validasi:
+                  type: string
+                  enum: [VALID, INVALID, PENDING, DUPLICATE]
+                nama_pegawai:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                kode_cabang:
+                  type: string
+                  maxLength: 5
+                  nullable: true
+                nama_cabang:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                nama_jabatan_detail:
+                  type: string
+                  maxLength: 255
+                  nullable: true
+                source_absensi:
+                  type: string
+                  enum: [MESIN_FINGERPRINT, SMARTPHONE_APP, WEB_PORTAL, QR_CODE, FACE_RECOGNITION, MANUAL_ENTRY]
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+
     delete:
       tags:
         - Transactional - Log Raw Absensi
       summary: Delete log raw absensi
       parameters:
-        - $ref: '#/components/parameters/IdParam'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 25
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
 
   # ============================================
   # TRANSACTIONAL - SHIFT HARIAN PEGAWAI
@@ -1028,10 +1612,42 @@ paths:
       tags:
         - Transactional - Shift Harian Pegawai
       summary: Generate shift harian otomatis
-      description: Generate shift harian dari r_shift_pegawai
+      description: Generate shift harian dari r_shift_pegawai untuk range tanggal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tanggal_mulai
+                - tanggal_akhir
+              properties:
+                tanggal_mulai:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+                  example: "2025-01-01"
+                  description: Format YYYY-MM-DD. Harus bulan dan tahun yang sama dengan tanggal_akhir
+                tanggal_akhir:
+                  type: string
+                  pattern: '^\d{4}-\d{2}-\d{2}$'
+                  example: "2025-01-31"
+                  description: Format YYYY-MM-DD. Harus >= tanggal_mulai dan bulan/tahun yang sama
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                  nullable: true
+                  description: Jika diisi, generate hanya untuk pegawai ini. Jika null, generate untuk semua pegawai
+                mode:
+                  type: string
+                  enum: [skip, overwrite, error]
+                  default: error
+                  description: skip = lewati jika sudah ada, overwrite = timpa yang sudah ada, error = error jika sudah ada
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /shift-harian-pegawai/manual:
     post:
@@ -1039,9 +1655,59 @@ paths:
         - Transactional - Shift Harian Pegawai
       summary: Create shift harian manual
       description: Untuk penugasan khusus atau override jadwal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_pegawai
+                - id_personal
+                - nama_pegawai
+                - tanggal_mulai
+                - tanggal_akhir
+                - id_shift_kerja
+                - id_lokasi_kerja
+              properties:
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                id_personal:
+                  type: string
+                  maxLength: 20
+                nama_pegawai:
+                  type: string
+                  maxLength: 100
+                tanggal_mulai:
+                  type: string
+                  format: date
+                tanggal_akhir:
+                  type: string
+                  format: date
+                  description: Harus >= tanggal_mulai
+                id_shift_kerja:
+                  type: string
+                  maxLength: 8
+                id_lokasi_kerja:
+                  type: string
+                  maxLength: 8
+                id_pegawai_pengganti:
+                  type: string
+                  maxLength: 10
+                  nullable: true
+                alasan_perubahan:
+                  type: string
+                  nullable: true
+                overwrite_existing:
+                  type: boolean
+                  default: false
+                  description: Timpa jadwal yang sudah ada
       responses:
         '201':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   /shift-harian-pegawai/range:
     get:
@@ -1053,57 +1719,119 @@ paths:
           in: query
           schema:
             type: string
+            maxLength: 10
+          description: Filter by pegawai (optional)
         - name: tanggal_mulai
           in: query
           required: true
           schema:
             type: string
             format: date
+          example: "2025-01-01"
         - name: tanggal_akhir
           in: query
           required: true
           schema:
             type: string
             format: date
+          example: "2025-01-31"
+          description: Harus >= tanggal_mulai
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
     put:
       tags:
         - Transactional - Shift Harian Pegawai
       summary: Update shift harian by range
-      description: Untuk cuti, izin, tukar shift
+      description: Untuk cuti, izin, tukar shift, perubahan lokasi
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_pegawai
+                - tanggal_mulai
+                - tanggal_akhir
+              properties:
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                tanggal_mulai:
+                  type: string
+                  format: date
+                tanggal_akhir:
+                  type: string
+                  format: date
+                  description: Harus >= tanggal_mulai
+                id_shift_kerja_aktual:
+                  type: string
+                  maxLength: 8
+                  description: Update shift kerja aktual
+                id_lokasi_kerja_aktual:
+                  type: string
+                  maxLength: 8
+                  description: Update lokasi kerja aktual
+                id_pegawai_pengganti:
+                  type: string
+                  maxLength: 10
+                  nullable: true
+                nama_pengganti:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                id_personal_pengganti:
+                  type: string
+                  maxLength: 20
+                  nullable: true
+                alasan_perubahan:
+                  type: string
+                  nullable: true
+              description: Minimal salah satu field update harus diisi
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
-    
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
     delete:
       tags:
         - Transactional - Shift Harian Pegawai
       summary: Delete shift harian by range
-      description: Pembatalan jadwal
-      parameters:
-        - name: id_pegawai
-          in: query
-          required: true
-          schema:
-            type: string
-        - name: tanggal_mulai
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
-        - name: tanggal_akhir
-          in: query
-          required: true
-          schema:
-            type: string
-            format: date
+      description: Pembatalan jadwal untuk range tanggal tertentu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_pegawai
+                - tanggal_mulai
+                - tanggal_akhir
+              properties:
+                id_pegawai:
+                  type: string
+                  maxLength: 10
+                tanggal_mulai:
+                  type: string
+                  format: date
+                tanggal_akhir:
+                  type: string
+                  format: date
+                  description: Harus >= tanggal_mulai
+                alasan_hapus:
+                  type: string
+                  nullable: true
       responses:
         '200':
           $ref: '#/components/responses/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
 
   # ============================================
   # TRANSACTIONAL - ABSENSI HARIAN
@@ -1384,6 +2112,26 @@ components:
                     type: array
                     items:
                       type: string
+              metadata:
+                type: object
+                nullable: true
+
+    NotFoundError:
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                example: 404
+              message:
+                type: string
+                example: Resource not found
+              data:
+                type: object
+                nullable: true
               metadata:
                 type: object
                 nullable: true
