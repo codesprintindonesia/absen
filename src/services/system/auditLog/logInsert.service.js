@@ -9,6 +9,11 @@ import { generateAuditId } from "../../../utils/audit.util.js";
 
 /**
  * Extract metadata dari request
+ * @param {Object} req - Express request object
+ * @returns {Object} Extracted metadata
+ * @returns {string} metadata.alamat_ip - IP address
+ * @returns {string} metadata.user_agent_info - User agent info
+ * @returns {string} metadata.id_user_pelaku - User ID
  */
 const extractMetadata = (req) => {
   return {
@@ -20,6 +25,14 @@ const extractMetadata = (req) => {
 
 /**
  * Log INSERT operation
+ * @param {Object} params - Parameters
+ * @param {string} params.nama_tabel - Table name
+ * @param {string} params.id_record - Record ID
+ * @param {Object} params.data_baru - New data object
+ * @param {Object} params.req - Express request object
+ * @param {Object} [options={}] - Additional options (e.g., transaction)
+ * @returns {Promise<Object>} Created audit log record
+ * @throws {Error} If required fields are missing
  */
 const logInsertService = async (params, options = {}) => {
   const { nama_tabel, id_record, data_baru, req } = params;

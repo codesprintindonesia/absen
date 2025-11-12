@@ -3,6 +3,12 @@ import createRepository from "../../../repositories/relational/shiftPegawai/crea
 import deactivateOverlapsRepository from "../../../repositories/relational/shiftPegawai/deactivateOverlaps.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk create shift pegawai dengan auto-resolve conflict (deactivate overlaps)
+ * @param {Object} data - Data shift pegawai yang akan dibuat
+ * @param {string} [createdBy='SYSTEM'] - Nama user yang membuat
+ * @returns {Promise<Object>} Data shift pegawai yang baru dibuat
+ */
 const createAutoResolveService = async (data, createdBy = "SYSTEM") => {
   if (!data.id_shift_kerja && !data.id_shift_group) {
     const err = new Error("HARUS_MENGISI_SHIFT_KERJA_ATAU_GROUP");

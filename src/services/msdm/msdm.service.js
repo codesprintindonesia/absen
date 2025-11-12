@@ -7,14 +7,15 @@ import fs from "fs";
 config();
 
 /**
- * Helper function to perform API requests with encryption and signature.
+ * Helper function to perform API requests with encryption and signature
+ * Handles AES encryption and RSA signature for MSDM API integration
  *
- * @param {string} method - HTTP method (GET, POST, etc.)
- * @param {string} endpoint - API endpoint
- * @param {object} dataBody - Request body
- * @returns {Promise} - Returns the response data
+ * @param {string} method - HTTP method (GET, POST, PUT, DELETE, etc.)
+ * @param {string} endpoint - API endpoint path
+ * @param {Object} [dataBody={}] - Request body data
+ * @returns {Promise<Object>} Response data from MSDM API
+ * @throws {Error} If API request fails
  */
-
 export const msdmService = async (method, endpoint, dataBody = {}) => {
   try {
     // Encrypt data if AES encryption is enabled

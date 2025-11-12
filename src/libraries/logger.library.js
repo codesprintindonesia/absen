@@ -1,9 +1,14 @@
 // src/logger.mjs
 import fs from "node:fs";
+import { hostname } from "node:os";
 import path from "node:path";
 import winston from "winston";
 import DailyRotateFile from "winston-daily-rotate-file";
 import { OpenTelemetryTransportV3 } from '@opentelemetry/winston-transport';
+import Transport from "winston-transport"; 
+import { config as dotenv} from "dotenv"; 
+
+dotenv();
 
 const LOG_ROOT = process.env.LOG_ROOT || "logs";
 const LOG_LEVEL = process.env.LOG_LEVEL || "info";
@@ -59,40 +64,27 @@ const rejRotate = new DailyRotateFile({
   level: "error",
 });
 
-// const logger = winston.createLogger({
-//   level: LOG_LEVEL,
-//   format,
-//   transports: [
-//     new winston.transports.Console({
-//       level: LOG_LEVEL,
-//       format: winston.format.combine(
-//         winston.format.colorize(),
-//         winston.format.simple()
-//       ),
-//     }),
-//     allRotate,
-//     errRotate,
-//   ],
-//   exceptionHandlers: [excRotate],
-//   rejectionHandlers: [rejRotate],
-//   exitOnError: false,
-// });
-
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
-  // simple format to keep output readable in terminal
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.printf((info) => {
-      const { timestamp, level, message, ...meta } = info;
-      const metaStr = Object.keys(meta).length
-        ? ` ${JSON.stringify(meta)}`
-        : "";
-      return `${timestamp} ${level}: ${message}${metaStr}`;
-    })
-  ),
-  transports: [new winston.transports.Console(), new OpenTelemetryTransportV3()],
-  // defaultMeta: { service: "winston-express-demo" }, // adds to every line
-});
+  level: LOG_LEVEL,
+  format,
+  transports: [
+    new winston.transports.Console({
+      level: LOG_LEVEL,
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    }),
+    // OpenTelemetry transport - mengirim logs ke OTel Collector/SigNoz
+    new OpenTelemetryTransportV3({
+      level: LOG_LEVEL,
+    }),
+    allRotate,
+    errRotate,
+  ],
+  exceptionHandlers: [excRotate],
+  rejectionHandlers: [rejRotate],
+  exitOnError: false,
+}); 
 
 export default logger;

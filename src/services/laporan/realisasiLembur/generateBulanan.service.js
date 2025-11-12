@@ -15,6 +15,9 @@ import { getSequelize } from "../../../libraries/databaseInstance.library.js";
 /**
  * Generate ID untuk realisasi lembur
  * Format: LEM-{ID_PEGAWAI}-{YYYYMM}
+ * @param {string} idPegawai - Employee ID
+ * @param {Date} periodeBulan - Period month
+ * @returns {string} Generated realisasi lembur ID
  */
 const generateRealisasiLemburId = (idPegawai, periodeBulan) => {
   const date = new Date(periodeBulan);
@@ -26,6 +29,14 @@ const generateRealisasiLemburId = (idPegawai, periodeBulan) => {
 /**
  * Hitung statistik dari data absensi
  * PURE FUNCTION - Tidak ada side effects
+ * @param {Array<Object>} dataAbsensi - Array of absensi harian records
+ * @returns {Object} Statistics object
+ * @returns {number} statistics.totalJamLemburBulanan - Total monthly overtime hours
+ * @returns {number} statistics.totalHariTerlambat - Total late days
+ * @returns {number} statistics.totalMenitKeterlambatan - Total late minutes
+ * @returns {number} statistics.totalHariTidakHadir - Total absent days
+ * @returns {number} statistics.totalHariKerjaEfektif - Total effective work days
+ * @returns {number} statistics.jumlahHariTerlambat - Count of late days
  */
 const hitungStatistikAbsensi = (dataAbsensi) => {
   let totalJamLemburBulanan = 0;
@@ -70,10 +81,15 @@ const hitungStatistikAbsensi = (dataAbsensi) => {
 
 /**
  * Generate realisasi lembur untuk SATU pegawai
- * @param {string} idPegawai - ID pegawai
- * @param {string} periodeBulan - Format: YYYY-MM-DD atau YYYY-MM-01
- * @param {Object} transaction - Transaction yang HARUS disediakan dari luar
- * @returns {Object} Result dengan data dan summary
+ * @param {string} idPegawai - Employee ID
+ * @param {string} periodeBulan - Period month (YYYY-MM-DD or YYYY-MM-01)
+ * @param {Object} transaction - Database transaction (REQUIRED from caller)
+ * @returns {Promise<Object>} Result dengan data dan summary
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<Object>} result.data - Created/updated realisasi lembur record
+ * @returns {Promise<Object>} result.summary - Processing summary
+ * @throws {Error} If transaction not provided
+ * @throws {Error} If no absensi data found for the period
  */
 const generateRealisasiLemburBulanan = async (idPegawai, periodeBulan, transaction) => {
   // Validasi transaction HARUS ada
@@ -165,9 +181,17 @@ const generateRealisasiLemburBulanan = async (idPegawai, periodeBulan, transacti
 /**
  * Generate realisasi lembur untuk SEMUA pegawai
  * TRANSACTION MANAGEMENT DI SINI
- * 
- * @param {string} periodeBulan - Format: YYYY-MM-DD
- * @returns {Object} Summary hasil generate
+ *
+ * @param {string} periodeBulan - Period month (YYYY-MM-DD)
+ * @returns {Promise<Object>} Summary hasil generate
+ * @returns {Promise<boolean>} result.success - Success status (true if all succeed)
+ * @returns {Promise<string>} result.periode - Processed period
+ * @returns {Promise<number>} result.total_pegawai - Total employees processed
+ * @returns {Promise<number>} result.total_success - Successfully processed count
+ * @returns {Promise<number>} result.total_error - Error count
+ * @returns {Promise<Array>} result.results - Array of successful results
+ * @returns {Promise<Array>} result.errors - Array of errors
+ * @throws {Error} If no absensi data found for the period
  */
 const generateRealisasiLemburBulananAllPegawai = async (periodeBulan) => {
   const sequelize = await getSequelize();

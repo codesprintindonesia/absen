@@ -11,6 +11,21 @@ const sequelize = await getSequelize();
 /**
  * Create shift harian manual (untuk override/special case)
  * Support bulk insert untuk rentang tanggal
+ * @param {Object} params - Parameters
+ * @param {string} params.idPegawai - Employee ID
+ * @param {string} params.idPersonal - Personal ID
+ * @param {string} params.namaPegawai - Employee name
+ * @param {string} params.tanggalMulai - Start date (YYYY-MM-DD)
+ * @param {string} params.tanggalAkhir - End date (YYYY-MM-DD)
+ * @param {string} params.idShiftKerja - Shift ID
+ * @param {string} params.idLokasiKerja - Work location ID
+ * @param {string} [params.idPegawaiPengganti=null] - Substitute employee ID
+ * @param {string} [params.alasanPerubahan=null] - Reason for change
+ * @param {boolean} [params.overwriteExisting=false] - Whether to overwrite existing records
+ * @returns {Promise<Object>} Result with success status and created records
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.message - Success message
+ * @returns {Promise<Object>} result.data - Created records data
  */
 export const createManualShiftService = async ({
   idPegawai,

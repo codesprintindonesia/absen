@@ -2,6 +2,17 @@ import createRepository from "../../../repositories/relational/shiftPegawai/crea
 import findOverlapActiveRepository from "../../../repositories/relational/shiftPegawai/findOverlapActive.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk create shift pegawai dengan validasi overlap
+ * @param {Object} data - Data shift pegawai yang akan dibuat
+ * @param {string} data.id_pegawai - ID pegawai
+ * @param {string} [data.id_shift_kerja] - ID shift kerja (eksklusif dengan id_shift_group)
+ * @param {string} [data.id_shift_group] - ID shift group (eksklusif dengan id_shift_kerja)
+ * @param {string} data.tanggal_mulai - Tanggal mulai berlaku
+ * @param {string} [data.tanggal_akhir] - Tanggal akhir berlaku
+ * @param {boolean} [data.is_active] - Status aktif
+ * @returns {Promise<Object>} Data shift pegawai yang baru dibuat
+ */
 const createService = async (data) => {
   // eksklusif: salah satu wajib diisi
   if (!data.id_shift_kerja && !data.id_shift_group) {

@@ -5,6 +5,8 @@
 
 /**
  * Group raw logs by id_pegawai
+ * @param {Array} rawLogs - Array of raw log objects
+ * @returns {Object} Grouped logs by pegawai ID
  */
 export const groupLogsByPegawai = (rawLogs) => {
   const grouped = {};
@@ -21,6 +23,8 @@ export const groupLogsByPegawai = (rawLogs) => {
 
 /**
  * Cari log masuk (source_absensi=1) pertama dan log pulang (source_absensi=2) terakhir
+ * @param {Array} logs - Array of log objects
+ * @returns {Object} Object containing logMasuk and logPulang
  */
 export const findMasukPulang = (logs) => {
   const masukLogs = logs.filter((log) => log.source_absensi === 1);
@@ -35,6 +39,9 @@ export const findMasukPulang = (logs) => {
 
 /**
  * Hitung selisih waktu dalam menit
+ * @param {Date|string} waktuAwal - Waktu awal
+ * @param {Date|string} waktuAkhir - Waktu akhir
+ * @returns {number} Selisih waktu dalam menit
  */
 export const hitungSelisihMenit = (waktuAwal, waktuAkhir) => {
   if (!waktuAwal || !waktuAkhir) return 0;
@@ -45,6 +52,10 @@ export const hitungSelisihMenit = (waktuAwal, waktuAkhir) => {
 
 /**
  * Hitung keterlambatan dalam menit
+ * @param {string} jamMasukJadwal - Jam masuk jadwal (format: "HH:mm:ss")
+ * @param {Date|string} jamMasukAktual - Jam masuk aktual
+ * @param {number} [toleransiMenit=0] - Toleransi keterlambatan dalam menit
+ * @returns {number} Keterlambatan dalam menit
  */
 export const hitungKeterlambatan = (
   jamMasukJadwal,
@@ -69,6 +80,9 @@ export const hitungKeterlambatan = (
 
 /**
  * Hitung pulang cepat dalam menit
+ * @param {string} jamPulangJadwal - Jam pulang jadwal (format: "HH:mm:ss")
+ * @param {Date|string} jamPulangAktual - Jam pulang aktual
+ * @returns {number} Pulang cepat dalam menit
  */
 export const hitungPulangCepat = (jamPulangJadwal, jamPulangAktual) => {
   if (!jamPulangJadwal || !jamPulangAktual) return 0;
@@ -89,6 +103,10 @@ export const hitungPulangCepat = (jamPulangJadwal, jamPulangAktual) => {
 /**
  * Hitung durasi kerja dalam menit (dikurangi waktu istirahat)
  * Untuk simplicity: hanya hitung selisih masuk-pulang
+ * @param {Date|string} jamMasuk - Jam masuk
+ * @param {Date|string} jamPulang - Jam pulang
+ * @param {number} [durasiIstirahatMenit=0] - Durasi istirahat dalam menit
+ * @returns {number} Durasi kerja efektif dalam menit
  */
 export const hitungDurasiKerjaMenit = (jamMasuk, jamPulang, durasiIstirahatMenit = 0) => {
   if (!jamMasuk || !jamPulang) return 0;
@@ -101,6 +119,8 @@ export const hitungDurasiKerjaMenit = (jamMasuk, jamPulang, durasiIstirahatMenit
 
 /**
  * Convert menit ke jam (decimal)
+ * @param {number} menit - Jumlah menit
+ * @returns {string} Jam dalam format decimal (2 desimal)
  */
 export const menitKeJam = (menit) => {
   return (menit / 60).toFixed(2);
@@ -108,6 +128,11 @@ export const menitKeJam = (menit) => {
 
 /**
  * Hitung lembur dalam menit
+ * @param {number} durasiKerjaMenit - Durasi kerja aktual dalam menit
+ * @param {number} durasiIstirahatMenit - Durasi istirahat dalam menit
+ * @param {string} jamMasukJadwal - Jam masuk jadwal (format: "HH:mm:ss")
+ * @param {string} jamPulangJadwal - Jam pulang jadwal (format: "HH:mm:ss")
+ * @returns {number} Lembur dalam menit
  */
 export const hitungLemburMenit = (
   durasiKerjaMenit,
@@ -139,6 +164,11 @@ export const hitungLemburMenit = (
 
 /**
  * Tentukan status kehadiran
+ * @param {Object|null} logMasuk - Log masuk pegawai
+ * @param {Object|null} logPulang - Log pulang pegawai
+ * @param {number} keterlambatanMenit - Keterlambatan dalam menit
+ * @param {number} pulangCepatMenit - Pulang cepat dalam menit
+ * @returns {string} Status kehadiran
  */
 export const tentukanStatusKehadiran = (
   logMasuk,
@@ -174,6 +204,11 @@ export const tentukanStatusKehadiran = (
 
 /**
  * Build catatan khusus berdasarkan kondisi absensi
+ * @param {string} statusKehadiran - Status kehadiran
+ * @param {number} keterlambatanMenit - Keterlambatan dalam menit
+ * @param {number} pulangCepatMenit - Pulang cepat dalam menit
+ * @param {number} lemburJam - Lembur dalam jam
+ * @returns {string|null} Catatan khusus atau null
  */
 export const buildCatatanKhusus = (
   statusKehadiran,

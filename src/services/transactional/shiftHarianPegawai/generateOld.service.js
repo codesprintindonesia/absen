@@ -7,14 +7,19 @@ import { getSequelize } from "../../../libraries/databaseInstance.library.js";
 const sequelize = await getSequelize();
 
 /**
- * Generate shift harian untuk pegawai
+ * Generate shift harian untuk pegawai (OLD VERSION - DEPRECATED)
  * UNIFIED APPROACH: Semua pattern menggunakan cycle-based logic
  *
- * @param {Object} params
- * @param {Date} params.tanggalMulai - Tanggal mulai
- * @param {Date} params.tanggalAkhir - Tanggal akhir
- * @param {string} params.idPegawai - Optional: ID pegawai spesifik
- * @returns {Promise<Object>}
+ * @deprecated Use generate.service.js instead
+ * @param {Object} params - Parameters
+ * @param {string} params.tanggalMulai - Start date (YYYY-MM-DD)
+ * @param {string} params.tanggalAkhir - End date (YYYY-MM-DD)
+ * @param {string} [params.idPegawai=null] - Specific employee ID (null for all employees)
+ * @param {string} [params.mode="error"] - Mode: 'skip', 'overwrite', or 'error'
+ * @returns {Promise<Object>} Result with generation summary
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.message - Success message
+ * @returns {Promise<Object>} result.data - Generation statistics
  */
 export const generateShiftHarianPegawaiService = async ({
   tanggalMulai,
@@ -115,8 +120,14 @@ export const generateShiftHarianPegawaiService = async ({
 };
 
 /**
- * Process shift untuk satu pegawai
+ * Process shift untuk satu pegawai (internal helper)
  * UNIFIED: Semua pattern (fixed, rotating) menggunakan cycle-based logic
+ * @param {Object} params - Parameters
+ * @param {Object} params.shiftPegawai - Shift pegawai assignment data
+ * @param {Array<string>} params.tanggalArray - Array of dates to process
+ * @param {string} params.mode - Processing mode (skip/overwrite/error)
+ * @param {Object} params.transaction - Database transaction
+ * @returns {Promise<void>}
  */
 const processShiftForPegawai = async ({
   shiftPegawai,
@@ -366,6 +377,9 @@ const processShiftForPegawai = async ({
 
 /**
  * Generate array tanggal dari start sampai end
+ * @param {string} startDate - Start date (YYYY-MM-DD)
+ * @param {string} endDate - End date (YYYY-MM-DD)
+ * @returns {Array<string>} Array of dates in YYYY-MM-DD format
  */
 const generateDateArray = (startDate, endDate) => {
   const dates = [];
@@ -382,6 +396,9 @@ const generateDateArray = (startDate, endDate) => {
 
 /**
  * Helper: Calculate optimal offset untuk multiple pegawai
+ * @param {number} numPegawai - Number of employees
+ * @param {number} cycleLength - Length of shift cycle in days
+ * @returns {Array<number>} Array of optimal offset values
  */
 export const calculateOptimalOffsets = (numPegawai, cycleLength) => {
   const offsets = [];

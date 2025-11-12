@@ -2,9 +2,12 @@
 import readRepository from '../../../repositories/master/hariLibur/read.repository.js';
 
 /**
- * Business logic untuk read hari libur
+ * Business logic untuk read hari libur dengan pagination dan filter
  * @param {Object} queryParams - Query parameters (sudah tervalidasi oleh Joi middleware)
- * @returns {Object} List hari libur dengan metadata pagination
+ * @param {number} queryParams.page - Halaman yang diminta
+ * @param {number} queryParams.limit - Jumlah item per halaman
+ * @param {string} [queryParams.search] - Keyword pencarian
+ * @returns {Promise<{holidays: Array, metadata: Object}>} List hari libur dengan metadata pagination
  */
 const read = async (queryParams) => {
   const { page, limit, search } = queryParams;

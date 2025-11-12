@@ -3,7 +3,11 @@ import findByIdRepository from '../../../repositories/master/kebijakanAbsensi/fi
 import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
 
 /**
- * Business logic untuk mengupdate kebijakan absensi.
+ * Business logic untuk mengupdate kebijakan absensi
+ * @param {string} id - ID kebijakan absensi yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data kebijakan absensi yang sudah diupdate
  */
 const update = async (id, updateData, updatedBy = 'SYSTEM') => {
   const existing = await findByIdRepository(id);

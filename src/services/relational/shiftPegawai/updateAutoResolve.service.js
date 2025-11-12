@@ -4,6 +4,13 @@ import findByIdRepository from "../../../repositories/relational/shiftPegawai/fi
 import deactivateOverlapsRepository from "../../../repositories/relational/shiftPegawai/deactivateOverlaps.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk update shift pegawai dengan auto-resolve conflict (deactivate overlaps)
+ * @param {string} id - ID shift pegawai yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data shift pegawai yang sudah diupdate
+ */
 const updateAutoResolveService = async (id, updateData, updatedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

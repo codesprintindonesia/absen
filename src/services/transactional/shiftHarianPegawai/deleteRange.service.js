@@ -11,6 +11,15 @@ const sequelize = await getSequelize();
 /**
  * Delete shift harian untuk rentang tanggal
  * Use case: pembatalan jadwal, error data, dll
+ * @param {Object} params - Parameters
+ * @param {string} params.idPegawai - Employee ID
+ * @param {string} params.tanggalMulai - Start date (YYYY-MM-DD)
+ * @param {string} params.tanggalAkhir - End date (YYYY-MM-DD)
+ * @returns {Promise<Object>} Result with success status and deletion count
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.message - Success message
+ * @returns {Promise<Object>} result.data - Deletion data
+ * @throws {Error} If no shift data found for the specified range
  */
 export const deleteRangeShiftService = async ({
   idPegawai,

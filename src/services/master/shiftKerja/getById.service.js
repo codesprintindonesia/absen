@@ -2,6 +2,11 @@
 import findByIdRepository from '../../../repositories/master/shiftKerja/findById.repository.js';
 import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
 
+/**
+ * Business logic untuk get shift kerja by ID
+ * @param {string} id - ID shift kerja
+ * @returns {Promise<Object>} Data shift kerja
+ */
 const getById = async (id) => {
   const record = await findByIdRepository(id);
   if (!record) {

@@ -7,8 +7,8 @@ import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
  * Business logic untuk update lokasi kerja
  * @param {string} id - ID lokasi kerja
  * @param {Object} updateData - Data untuk diupdate (sudah tervalidasi)
- * @param {string} updatedBy - User ID yang melakukan update
- * @returns {Object} Data lokasi kerja yang sudah diupdate
+ * @param {string} [updatedBy='SYSTEM'] - User ID yang melakukan update
+ * @returns {Promise<Object>} Data lokasi kerja yang sudah diupdate
  */
 const update = async (id, updateData, updatedBy = 'SYSTEM') => {
   // Business Rule 1: Check if lokasi kerja exists

@@ -23,7 +23,7 @@ async function startApplication() {
         // Step 2: Initialize OpenTelemetry
         console.log("[STARTUP] Initializing OpenTelemetry...");
         try {
-            await import("./src/libraries/otel.library.cjs");
+            await import("./src/libraries/otel.library.js");
             console.log("[STARTUP] OpenTelemetry initialized successfully");
         } catch (otelError) {
             console.error("[STARTUP] Failed to initialize OpenTelemetry:", otelError.message);

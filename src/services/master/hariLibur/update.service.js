@@ -13,8 +13,9 @@ import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
  * Business logic untuk update hari libur dengan audit log
  * @param {string} tanggal - Tanggal hari libur (PK)
  * @param {Object} updateData - Data untuk diupdate (sudah tervalidasi)
- * @param {Object} req - Express request object
- * @returns {Object} Data hari libur yang sudah diupdate
+ * @param {Object} [options] - Options object
+ * @param {Object} [options.req] - Express request object
+ * @returns {Promise<Object>} Data hari libur yang sudah diupdate
  */
 const update = async (tanggal, updateData, { req } = {}) => {
   const sequelize = await getSequelize();

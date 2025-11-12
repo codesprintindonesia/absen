@@ -1,4 +1,7 @@
 // src/app.js - Main Application Entry Point
+import { openTelemetry } from "./libraries/otel.library.js";
+openTelemetry.initialize();
+
 import { httpServer, httpPort } from "./servers/http.server.js";
 import { validateEnv } from "./validations/env.validation.js"; 
 import logger from "./libraries/logger.library.js";

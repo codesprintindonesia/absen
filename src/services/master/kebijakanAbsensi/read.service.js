@@ -2,9 +2,13 @@
 import readRepository from '../../../repositories/master/kebijakanAbsensi/read.repository.js';
 
 /**
- * Business logic untuk read kebijakan absensi
+ * Business logic untuk read kebijakan absensi dengan pagination dan filter
  * @param {Object} queryParams - Query parameters (sudah tervalidasi oleh Joi middleware)
- * @returns {Object} List kebijakan absensi dengan metadata pagination
+ * @param {number} [queryParams.page=1] - Halaman yang diminta
+ * @param {number} [queryParams.limit=20] - Jumlah item per halaman
+ * @param {boolean} [queryParams.is_active] - Filter berdasarkan status aktif
+ * @param {string} [queryParams.search] - Keyword pencarian
+ * @returns {Promise<{locations: Array, metadata: Object}>} List kebijakan absensi dengan metadata pagination
  */
 const readService = async (queryParams) => {
   const { page = 1, limit = 20, is_active, search } = queryParams;

@@ -1,5 +1,24 @@
 import readRepository from "../../../repositories/transactional/logRawAbsensi/read.repository.js";
 
+/**
+ * Read log raw absensi with pagination and filters
+ * @param {Object} queryParams - Query parameters
+ * @param {number} [queryParams.page=1] - Page number
+ * @param {number} [queryParams.limit=20] - Records per page
+ * @param {string} [queryParams.id_pegawai] - Filter by employee ID
+ * @param {string} [queryParams.id_lokasi_kerja] - Filter by work location ID
+ * @param {string} [queryParams.source_absensi] - Filter by attendance source
+ * @param {string} [queryParams.status_validasi] - Filter by validation status
+ * @param {string} [queryParams.waktu_log_from] - Filter by log time from
+ * @param {string} [queryParams.waktu_log_to] - Filter by log time to
+ * @param {string} [queryParams.tanggal_from] - Filter by date from
+ * @param {string} [queryParams.tanggal_to] - Filter by date to
+ * @param {string} [queryParams.search] - Search keyword
+ * @param {Array<string>} [queryParams.search_fields] - Fields to search in
+ * @returns {Promise<Object>} Result with items and pagination metadata
+ * @returns {Promise<Object>} result.items - Array of log raw absensi records
+ * @returns {Promise<Object>} result.metadata - Pagination metadata
+ */
 const readService = async (queryParams) => {
   const {
     page = 1,

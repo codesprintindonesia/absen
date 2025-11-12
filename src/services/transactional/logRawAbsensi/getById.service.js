@@ -1,6 +1,12 @@
 import findByIdRepository from "../../../repositories/transactional/logRawAbsensi/findById.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Get log raw absensi by ID
+ * @param {string} id - Log raw absensi ID
+ * @returns {Promise<Object>} Log raw absensi record
+ * @throws {Error} LOG_RAW_ABSENSI_NOT_FOUND if record not found
+ */
 const getByIdService = async (id) => {
   const detail = await findByIdRepository(id);
   if (!detail) {

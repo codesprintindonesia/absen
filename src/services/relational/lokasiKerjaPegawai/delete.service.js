@@ -2,6 +2,12 @@ import deleteRepository from "../../../repositories/relational/lokasiKerjaPegawa
 import findByIdRepository from "../../../repositories/relational/lokasiKerjaPegawai/findById.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk menghapus lokasi kerja pegawai
+ * @param {string} id - ID lokasi kerja pegawai yang akan dihapus
+ * @param {string} [deletedBy='SYSTEM'] - Nama user yang menghapus
+ * @returns {Promise<Object>} Data lokasi kerja pegawai yang dihapus beserta metadata
+ */
 const deleteService = async (id, deletedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

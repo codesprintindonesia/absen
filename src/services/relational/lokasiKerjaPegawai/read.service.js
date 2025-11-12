@@ -1,5 +1,18 @@
 import readRepository from "../../../repositories/relational/lokasiKerjaPegawai/read.repository.js";
 
+/**
+ * Business logic untuk read lokasi kerja pegawai dengan pagination dan filter
+ * @param {Object} queryParams - Query parameters
+ * @param {number} [queryParams.page=1] - Halaman yang diminta
+ * @param {number} [queryParams.limit=20] - Jumlah item per halaman
+ * @param {string} [queryParams.id_pegawai] - Filter berdasarkan pegawai ID
+ * @param {string} [queryParams.id_lokasi_kerja] - Filter berdasarkan lokasi kerja ID
+ * @param {boolean} [queryParams.is_active] - Filter berdasarkan status aktif
+ * @param {number} [queryParams.prioritas_lokasi] - Filter berdasarkan prioritas lokasi
+ * @param {string} [queryParams.tanggal_mulai_berlaku] - Filter berdasarkan tanggal mulai berlaku
+ * @param {string} [queryParams.tanggal_akhir_berlaku] - Filter berdasarkan tanggal akhir berlaku
+ * @returns {Promise<{items: Array, metadata: Object}>} List lokasi kerja pegawai dengan metadata pagination
+ */
 const readService = async (queryParams) => {
   const {
     page = 1,

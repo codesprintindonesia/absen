@@ -3,6 +3,12 @@ import deleteRepository from '../../../repositories/master/shiftKerja/delete.rep
 import findByIdRepository from '../../../repositories/master/shiftKerja/findById.repository.js';
 import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
 
+/**
+ * Business logic untuk menghapus shift kerja
+ * @param {string} id - ID shift kerja yang akan dihapus
+ * @param {string} [deletedBy='SYSTEM'] - Nama user yang menghapus
+ * @returns {Promise<Object>} Data shift yang dihapus beserta metadata
+ */
 const deleteShiftKerja = async (id, deletedBy = 'SYSTEM') => {
   const existing = await findByIdRepository(id);
   if (!existing) {

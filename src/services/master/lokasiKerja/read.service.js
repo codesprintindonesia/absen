@@ -4,7 +4,12 @@ import readRepository from '../../../repositories/master/lokasiKerja/read.reposi
 /**
  * Business logic untuk read lokasi kerja
  * @param {Object} queryParams - Query parameters (sudah tervalidasi oleh Joi middleware)
- * @returns {Object} List lokasi kerja dengan metadata pagination
+ * @param {number} queryParams.page - Halaman yang diminta
+ * @param {number} queryParams.limit - Jumlah item per halaman
+ * @param {string} [queryParams.type_lokasi] - Filter berdasarkan tipe lokasi
+ * @param {boolean} [queryParams.is_active] - Filter berdasarkan status aktif
+ * @param {string} [queryParams.search] - Keyword pencarian
+ * @returns {Promise<{locations: Array, metadata: Object}>} List lokasi kerja dengan metadata pagination
  */
 const read = async (queryParams) => {
   const { page, limit, type_lokasi, is_active, search } = queryParams;

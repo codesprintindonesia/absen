@@ -3,7 +3,10 @@ import findByIdRepository from '../../../repositories/master/kebijakanAbsensi/fi
 import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
 
 /**
- * Business logic untuk menghapus kebijakan absensi (hard delete).
+ * Business logic untuk menghapus kebijakan absensi (hard delete)
+ * @param {string} id - ID kebijakan absensi yang akan dihapus
+ * @param {string} [deletedBy='SYSTEM'] - Nama user yang menghapus
+ * @returns {Promise<Object>} Data kebijakan yang dihapus beserta metadata
  */
 const deleteKebijakanAbsensi = async (id, deletedBy = 'SYSTEM') => {
   const existing = await findByIdRepository(id);

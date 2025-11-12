@@ -7,12 +7,16 @@ import {
   logProcess,
   logError,
 } from "../../../middlewares/requestLogger.middleware.js";
+// import logger from "../../../libraries/logger.library.js";
+import { logger } from "../../../libraries/winston.lib.js"; 
 
 /**
  * GET /lokasi-kerja
  * Get read lokasi kerja dengan filtering dan pagination
  */
 const readController = async (req, res) => {
+  logger.info("Controller: Read lokasi kerja called"); 
+
   try {
     logProcess(req, "Start processing read lokasi kerja request", {
       query: req.query,

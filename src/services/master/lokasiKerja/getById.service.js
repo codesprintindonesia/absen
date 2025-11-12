@@ -3,7 +3,7 @@ import findByIdRepository from '../../../repositories/master/lokasiKerja/findByI
 /**
  * Business logic untuk get lokasi kerja by ID
  * @param {string} id - ID lokasi kerja
- * @returns {Object} Data lokasi kerja
+ * @returns {Promise<Object>} Data lokasi kerja
  */
 const getById = async (id) => {
   const location = await findByIdRepository(id);

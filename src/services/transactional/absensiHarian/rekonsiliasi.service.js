@@ -321,15 +321,22 @@ const prosesAbsensiPegawai = async (
 
 /**
  * Main service: Proses rekonsiliasi untuk satu tanggal
- * 
+ *
  * BUSINESS LOGIC:
  * 1. PRE-CHECK: Cek semua pegawai apakah sudah ada data absensi
  * 2. Jika ADA yang sudah punya data → Return error dengan daftar pegawai
  * 3. Jika SEMUA belum ada data → Lanjut proses rekonsiliasi
  * 4. Selalu insert log ke s_proses_harian
- * 
+ *
  * @param {string} tanggal - Tanggal dalam format YYYY-MM-DD
- * @returns {Object} Result proses rekonsiliasi
+ * @returns {Promise<Object>} Result proses rekonsiliasi
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.tanggal - Processed date
+ * @returns {Promise<number>} result.total_pegawai - Total employees processed
+ * @returns {Promise<number>} result.berhasil - Successfully processed count
+ * @returns {Promise<number>} result.gagal - Failed count
+ * @returns {Promise<number>} result.durasi_detik - Duration in seconds
+ * @throws {Error} DUPLICATE_ABSENSI_DATA if absensi data already exists
  */
 export const prosesRekonsiliasi = async (tanggal) => {
   const waktuMulai = new Date();

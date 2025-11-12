@@ -11,6 +11,22 @@ const sequelize = await getSequelize();
 /**
  * Update shift harian untuk rentang tanggal
  * Use case: cuti, izin, tukar shift, perubahan lokasi, dll
+ * @param {Object} params - Parameters
+ * @param {string} params.idPegawai - Employee ID
+ * @param {string} params.tanggalMulai - Start date (YYYY-MM-DD)
+ * @param {string} params.tanggalAkhir - End date (YYYY-MM-DD)
+ * @param {Object} params.updateData - Data to update
+ * @param {string} [params.updateData.idShiftKerjaAktual] - Actual shift ID
+ * @param {string} [params.updateData.idLokasiKerjaAktual] - Actual work location ID
+ * @param {string} [params.updateData.idPegawaiPengganti] - Substitute employee ID
+ * @param {string} [params.updateData.namaPengganti] - Substitute employee name
+ * @param {string} [params.updateData.idPersonalPengganti] - Substitute personal ID
+ * @param {string} [params.updateData.alasanPerubahan] - Reason for change
+ * @returns {Promise<Object>} Result with update count
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.message - Success message
+ * @returns {Promise<Object>} result.data - Update data
+ * @throws {Error} If no shift data found for the specified range
  */
 export const updateRangeShiftService = async ({
   idPegawai,

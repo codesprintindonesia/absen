@@ -4,6 +4,13 @@ import findByIdRepository from "../../../repositories/relational/lokasiKerjaPega
 import readRepository from "../../../repositories/relational/lokasiKerjaPegawai/read.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk update lokasi kerja pegawai
+ * @param {string} id - ID lokasi kerja pegawai yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data lokasi kerja pegawai yang sudah diupdate
+ */
 const updateService = async (id, updateData, updatedBy = "SYSTEM") => {
   // pastikan data ada
   const existing = await findByIdRepository(id);

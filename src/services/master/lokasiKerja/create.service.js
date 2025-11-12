@@ -5,7 +5,7 @@ import findByKodeReferensiAndType from "../../../repositories/master/lokasiKerja
 /**
  * Business logic untuk create lokasi kerja
  * @param {Object} data - Data lokasi kerja baru (sudah tervalidasi oleh Joi middleware)
- * @returns {Object} Lokasi kerja yang dibuat
+ * @returns {Promise<Object>} Lokasi kerja yang dibuat
  */
 const create = async (data) => {
   const { kode_referensi, type_lokasi } = data;

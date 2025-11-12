@@ -5,7 +5,7 @@ import checkUsageRepository from '../../../repositories/master/lokasiKerja/check
  * Business logic untuk check dampak delete tanpa melakukan delete
  * Useful untuk konfirmasi sebelum delete
  * @param {string} id - ID lokasi kerja
- * @returns {Object} Impact analysis
+ * @returns {Promise<Object>} Impact analysis
  */
 const checkDeleteImpact = async (id) => {
   // Check if lokasi kerja exists

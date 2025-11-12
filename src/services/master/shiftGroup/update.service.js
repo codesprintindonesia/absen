@@ -1,7 +1,14 @@
 import updateRepository from '../../../repositories/master/shiftGroup/update.repository.js';
 import findByIdRepository from '../../../repositories/master/shiftGroup/findById.repository.js';
 import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
- 
+
+/**
+ * Business logic untuk update shift group
+ * @param {string} id - ID shift group yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data shift group yang sudah diupdate
+ */
 const update = async (id, updateData, updatedBy = 'SYSTEM') => {
   const existing = await findByIdRepository(id);
   if (!existing) {

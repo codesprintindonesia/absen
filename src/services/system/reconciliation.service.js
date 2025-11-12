@@ -5,6 +5,10 @@
 
 import { setupScheduler, jalankanManual, cekStatus } from '../../schedulers/reconciliation.scheduler.js';
 
+/**
+ * Get status reconciliation scheduler
+ * @returns {Promise<Object>} Status reconciliation dan jadwal berikutnya
+ */
 const getReconciliationStatus = async () => {
   const status = await cekStatus();
   return {
@@ -13,6 +17,11 @@ const getReconciliationStatus = async () => {
   };
 };
 
+/**
+ * Jalankan reconciliation secara manual
+ * @param {string} [targetDate] - Target date untuk reconciliation (optional, default: kemarin)
+ * @returns {Promise<Object>} Response message dan target date
+ */
 const runManualReconciliation = async (targetDate) => {
   await jalankanManual(targetDate);
   return {
@@ -21,6 +30,10 @@ const runManualReconciliation = async (targetDate) => {
   };
 };
 
+/**
+ * Initialize reconciliation scheduler (non-async)
+ * @returns {void}
+ */
 const initializeReconciliationScheduler = () => {
   setupScheduler();
 };

@@ -13,6 +13,20 @@ import findShiftKerjaWithHariKerja from "../../../repositories/master/shiftKerja
 
 const sequelize = await getSequelize();
 
+/**
+ * Generate shift harian untuk pegawai berdasarkan shift assignment
+ * Supports both fixed shift and rotating shift patterns
+ * @param {Object} params - Parameters
+ * @param {string} params.tanggalMulai - Start date (YYYY-MM-DD)
+ * @param {string} params.tanggalAkhir - End date (YYYY-MM-DD)
+ * @param {string} [params.idPegawai=null] - Specific employee ID (null for all employees)
+ * @param {string} [params.mode="error"] - Mode: 'skip', 'overwrite', or 'error'
+ * @returns {Promise<Object>} Result with generation summary
+ * @returns {Promise<boolean>} result.success - Success status
+ * @returns {Promise<string>} result.message - Success message
+ * @returns {Promise<Object>} result.data - Generation statistics
+ * @throws {Error} If no active shift assignments found
+ */
 export const generateShiftHarianPegawaiService = async ({
   tanggalMulai,
   tanggalAkhir,
@@ -82,6 +96,15 @@ export const generateShiftHarianPegawaiService = async ({
   }
 };
 
+/**
+ * Process shift untuk satu pegawai (internal helper)
+ * @param {Object} params - Parameters
+ * @param {Object} params.shiftPegawai - Shift pegawai assignment data
+ * @param {Array<string>} params.tanggalArray - Array of dates to process
+ * @param {string} params.mode - Processing mode (skip/overwrite/error)
+ * @param {Object} params.transaction - Database transaction
+ * @returns {Promise<Object>} Processing results with counts
+ */
 const processShiftForPegawai = async ({
   shiftPegawai,
   tanggalArray,
@@ -255,6 +278,12 @@ const processShiftForPegawai = async ({
   return results;
 };
 
+/**
+ * Generate array of dates from start to end
+ * @param {string} startDate - Start date (YYYY-MM-DD)
+ * @param {string} endDate - End date (YYYY-MM-DD)
+ * @returns {Array<string>} Array of dates in YYYY-MM-DD format
+ */
 const generateDateArray = (startDate, endDate) => {
   const dates = [];
   const current = new Date(startDate);
@@ -268,6 +297,12 @@ const generateDateArray = (startDate, endDate) => {
   return dates;
 };
 
+/**
+ * Calculate optimal offsets for distributing employees across shift cycle
+ * @param {number} numPegawai - Number of employees
+ * @param {number} cycleLength - Length of shift cycle in days
+ * @returns {Array<number>} Array of optimal offset values
+ */
 export const calculateOptimalOffsets = (numPegawai, cycleLength) => {
   const offsets = [];
 

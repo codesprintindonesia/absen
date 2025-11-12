@@ -3,6 +3,13 @@ import findByIdRepository from "../../../repositories/relational/shiftPegawai/fi
 import findOverlapActiveRepository from "../../../repositories/relational/shiftPegawai/findOverlapActive.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk update shift pegawai dengan validasi overlap
+ * @param {string} id - ID shift pegawai yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data shift pegawai yang sudah diupdate
+ */
 const updateService = async (id, updateData, updatedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

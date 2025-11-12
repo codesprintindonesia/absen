@@ -1,5 +1,16 @@
 import readRepository from "../../../repositories/relational/shiftPegawai/read.repository.js";
 
+/**
+ * Business logic untuk read shift pegawai dengan pagination dan filter
+ * @param {Object} queryParams - Query parameters
+ * @param {number} [queryParams.page=1] - Halaman yang diminta
+ * @param {number} [queryParams.limit=20] - Jumlah item per halaman
+ * @param {string} [queryParams.id_pegawai] - Filter berdasarkan pegawai ID
+ * @param {string} [queryParams.id_shift_kerja] - Filter berdasarkan shift kerja ID
+ * @param {string} [queryParams.id_shift_group] - Filter berdasarkan shift group ID
+ * @param {boolean} [queryParams.is_active] - Filter berdasarkan status aktif
+ * @returns {Promise<{items: Array, metadata: Object}>} List shift pegawai dengan metadata pagination
+ */
 const readService = async (queryParams) => {
   const {
     page = 1,

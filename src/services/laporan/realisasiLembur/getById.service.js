@@ -2,6 +2,12 @@
 
 import getByIdRepository from "../../../repositories/laporan/realisasiLembur/getById.repository.js";
 
+/**
+ * Get realisasi lembur by ID
+ * @param {string} id - Realisasi lembur ID
+ * @returns {Promise<Object>} Realisasi lembur record
+ * @throws {Error} If record not found (404)
+ */
 const getByIdService = async (id) => {
   const result = await getByIdRepository(id);
   

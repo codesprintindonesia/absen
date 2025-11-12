@@ -2,6 +2,17 @@ import deleteRepository from "../../../repositories/transactional/logRawAbsensi/
 import findByIdRepository from "../../../repositories/transactional/logRawAbsensi/findById.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Delete log raw absensi by ID
+ * @param {string} id - Log raw absensi ID
+ * @param {string} [deletedBy="SYSTEM"] - User ID who deleted the record
+ * @returns {Promise<Object>} Deletion result with deleted record details
+ * @returns {Promise<Object>} result.deleted_detail - Details of deleted record
+ * @returns {Promise<string>} result.deleted_by - User who deleted the record
+ * @returns {Promise<string>} result.deleted_at - Deletion timestamp
+ * @throws {Error} LOG_RAW_ABSENSI_NOT_FOUND if record not found
+ * @throws {Error} DELETE_FAILED if deletion failed
+ */
 const deleteService = async (id, deletedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

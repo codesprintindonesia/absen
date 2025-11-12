@@ -5,7 +5,7 @@ import HTTP_STATUS from '../../../constants/httpStatus.constant.js';
 /**
  * Business logic untuk get hari libur by tanggal
  * @param {string} tanggal - Tanggal hari libur
- * @returns {Object} Data hari libur
+ * @returns {Promise<Object>} Data hari libur
  */
 const getById = async (tanggal) => {
   const holiday = await findByIdRepository(tanggal);

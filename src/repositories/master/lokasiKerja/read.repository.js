@@ -6,7 +6,7 @@ import { Op } from "sequelize";
  * Repository untuk read lokasi kerja dengan filtering
  * Direct database operation only
  * @param {Object} params - params untuk query
- * @returns {Object} Result dengan rows dan count
+ * @returns {Promise<{locations: Array, metadata: Object}>} List lokasi kerja dengan metadata pagination
  */
 const read = async (params, options = {}) => {
   const { page = 1, limit = 20, filters, orderBy } = params;

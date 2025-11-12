@@ -5,8 +5,8 @@ import checkUsageRepository from '../../../repositories/master/lokasiKerja/check
 /**
  * Business logic untuk hard delete lokasi kerja
  * @param {string} id - ID lokasi kerja
- * @param {string} deletedBy - User ID yang melakukan delete
- * @returns {Object} Result delete dengan informasi affected records
+ * @param {string} [deletedBy='SYSTEM'] - User ID yang melakukan delete
+ * @returns {Promise<Object>} Result delete dengan informasi affected records
  */
 const deleteLokasiKerja = async (id, deletedBy = 'SYSTEM') => {
   // Business Rule 1: Check if lokasi kerja exists

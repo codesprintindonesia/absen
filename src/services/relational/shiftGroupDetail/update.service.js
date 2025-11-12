@@ -2,6 +2,13 @@ import updateRepository from "../../../repositories/relational/shiftGroupDetail/
 import findByIdRepository from "../../../repositories/relational/shiftGroupDetail/findById.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk update shift group detail
+ * @param {string} id - ID shift group detail yang akan diupdate
+ * @param {Object} updateData - Data yang akan diupdate
+ * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @returns {Promise<Object>} Data shift group detail yang sudah diupdate
+ */
 const updateService = async (id, updateData, updatedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

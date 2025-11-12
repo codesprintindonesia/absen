@@ -2,6 +2,12 @@ import deleteRepository from "../../../repositories/relational/shiftGroupDetail/
 import findByIdRepository from "../../../repositories/relational/shiftGroupDetail/findById.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 
+/**
+ * Business logic untuk menghapus shift group detail
+ * @param {string} id - ID shift group detail yang akan dihapus
+ * @param {string} [deletedBy='SYSTEM'] - Nama user yang menghapus
+ * @returns {Promise<Object>} Data shift group detail yang dihapus beserta metadata
+ */
 const deleteService = async (id, deletedBy = "SYSTEM") => {
   const existing = await findByIdRepository(id);
   if (!existing) {

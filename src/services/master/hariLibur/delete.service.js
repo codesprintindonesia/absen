@@ -12,8 +12,9 @@ import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
 /**
  * Business logic untuk delete hari libur dengan audit log
  * @param {string} tanggal - Tanggal hari libur (PK)
- * @param {Object} req - Express request object
- * @returns {Object} Data hari libur yang dihapus
+ * @param {Object} [options] - Options object
+ * @param {Object} [options.req] - Express request object
+ * @returns {Promise<Object>} Data hari libur yang dihapus
  */
 const deleteHariLibur = async (tanggal, { req } = {}) => {
   const sequelize = await getSequelize();
