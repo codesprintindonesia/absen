@@ -18,11 +18,11 @@ import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
  */
 const create = async (data, { req } = {}) => {
   const sequelize = await getSequelize();
-
-  // Start manual transaction
-  const transaction = await sequelize.transaction();
+  let transaction;
 
   try {
+    // Start manual transaction
+    transaction = await sequelize.transaction();
     // Business Rule: Check duplicate tanggal
     const existingHoliday = await findByIdRepository(data.tanggal, {
       transaction,
@@ -55,7 +55,7 @@ const create = async (data, { req } = {}) => {
     return holiday;
   } catch (error) {
     // Rollback jika ada error
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     throw error;
   }
 };

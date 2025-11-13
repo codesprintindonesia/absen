@@ -18,13 +18,13 @@ import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
  */
 const deleteHariLibur = async (tanggal, { req } = {}) => {
   const sequelize = await getSequelize();
-
-  // Start manual transaction
-  const transaction = await sequelize.transaction();
+  let transaction;
 
   console.log("Deleting holiday on tanggal:", tanggal);
 
   try {
+    // Start manual transaction
+    transaction = await sequelize.transaction();
     // Business Rule: Check if hari libur exists
     const existingHoliday = await findByIdRepository(tanggal, { transaction });
     if (!existingHoliday) {
@@ -56,7 +56,7 @@ const deleteHariLibur = async (tanggal, { req } = {}) => {
     return beforeData;
   } catch (error) {
     // Rollback jika ada error
-    await transaction.rollback();
+    if (transaction) await transaction.rollback();
     throw error;
   }
 };

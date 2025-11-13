@@ -79,7 +79,7 @@ export default class Database {
               : config.pool?.min ?? 0,
             acquire: process.env.DB_POOL_ACQUIRE
               ? Number(process.env.DB_POOL_ACQUIRE)
-              : config.pool?.acquire ?? 30000,
+              : config.pool?.acquire ?? 15000, // reduced from 30s to 15s
             idle: process.env.DB_POOL_IDLE
               ? Number(process.env.DB_POOL_IDLE)
               : config.pool?.idle ?? 10000,
@@ -87,7 +87,28 @@ export default class Database {
               ? Number(process.env.DB_POOL_EVICT)
               : config.pool?.evict ?? 1000,
           },
-          logging: false, // set true jika ingin debug query
+          dialectOptions: {
+            // Protection against slow queries
+            statement_timeout: process.env.DB_STATEMENT_TIMEOUT
+              ? Number(process.env.DB_STATEMENT_TIMEOUT)
+              : config.dialectOptions?.statement_timeout ?? 30000, // 30 seconds
+
+            // Protection against forgotten transactions (deadlock prevention)
+            idle_in_transaction_session_timeout: process.env.DB_IDLE_TRANSACTION_TIMEOUT
+              ? Number(process.env.DB_IDLE_TRANSACTION_TIMEOUT)
+              : config.dialectOptions?.idle_in_transaction_session_timeout ?? 60000, // 60 seconds
+
+            // Additional security options
+            ...(config.dialectOptions || {}),
+          },
+          logging: process.env.DB_LOGGING === "true"
+            ? (sql, timing) => {
+                // Log slow queries only (> 1000ms)
+                if (timing && timing > 1000) {
+                  console.log(chalk.yellow(`[SLOW QUERY ${timing}ms]`), sql.substring(0, 200));
+                }
+              }
+            : false,
           define: {
             underscored: true,
             freezeTableName: false,
