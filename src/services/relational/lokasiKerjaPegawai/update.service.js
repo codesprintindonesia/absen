@@ -1,41 +1,68 @@
+// ================================================================
 // src/services/relational/lokasiKerjaPegawai/update.service.js
+// Service untuk update lokasi kerja pegawai DENGAN AUDIT LOG
+// ================================================================
+
+import { getSequelize } from "../../../libraries/databaseInstance.library.js";
 import updateRepository from "../../../repositories/relational/lokasiKerjaPegawai/update.repository.js";
 import findByIdRepository from "../../../repositories/relational/lokasiKerjaPegawai/findById.repository.js";
-import readRepository from "../../../repositories/relational/lokasiKerjaPegawai/read.repository.js";
 import HTTP_STATUS from "../../../constants/httpStatus.constant.js";
+import { auditLog, AUDIT_ACTION } from "../../../utils/audit.util.js";
 
 /**
- * Business logic untuk update lokasi kerja pegawai
+ * Business logic untuk update lokasi kerja pegawai dengan audit log
  * @param {string} id - ID lokasi kerja pegawai yang akan diupdate
  * @param {Object} updateData - Data yang akan diupdate
- * @param {string} [updatedBy='SYSTEM'] - Nama user yang mengupdate
+ * @param {Object} [options] - Options object
+ * @param {Object} [options.req] - Express request object
+ * @param {string} [options.updatedBy='SYSTEM'] - Nama user yang mengupdate
  * @returns {Promise<Object>} Data lokasi kerja pegawai yang sudah diupdate
  */
-const updateService = async (id, updateData, updatedBy = "SYSTEM") => {
-  // pastikan data ada
-  const existing = await findByIdRepository(id);
-  if (!existing) {
-    const error = new Error("LOKASI_KERJA_PEGAWAI_NOT_FOUND");
-    error.statusCode = HTTP_STATUS.NOT_FOUND;
+const updateService = async (id, updateData, { req, updatedBy = 'SYSTEM' } = {}) => {
+  const sequelize = await getSequelize();
+  let transaction;
+
+  try {
+    transaction = await sequelize.transaction();
+
+    // Business Rule: Check if data exists
+    const existing = await findByIdRepository(id, { transaction });
+    if (!existing) {
+      const error = new Error("LOKASI_KERJA_PEGAWAI_NOT_FOUND");
+      error.statusCode = HTTP_STATUS.NOT_FOUND;
+      throw error;
+    }
+
+    // Simpan data lama untuk audit
+    const beforeData = existing;
+
+    // Siapkan payload aktual
+    const dataToUpdate = {
+      ...updateData,
+      updated_by: updatedBy,
+      updated_at: new Date(),
+    };
+
+    // Update via repository
+    const updated = await updateRepository(id, dataToUpdate, { transaction });
+
+    // Log audit UPDATE
+    await auditLog({
+      action: AUDIT_ACTION.UPDATE,
+      tableName: "relational.r_lokasi_kerja_pegawai",
+      refId: id,
+      beforeData: beforeData,
+      afterData: updated,
+      req,
+      transaction,
+    });
+
+    await transaction.commit();
+    return updated;
+  } catch (error) {
+    if (transaction) await transaction.rollback();
     throw error;
   }
-
-  // nilai target setelah update (pakai payload jika ada, fallback ke existing)
-  const targetIdPegawai =
-    updateData.id_pegawai !== undefined ? updateData.id_pegawai : existing.id_pegawai; 
-
-  const targetIsAktif =
-    updateData.is_active !== undefined ? updateData.is_active : existing.is_active; 
-
-  // siapkan payload aktual (gaya kamu: catat updated_by & updated_at)
-  const dataToUpdate = {
-    ...updateData,
-    updated_by: updatedBy,
-    updated_at: new Date(),
-  };
-
-  const updated = await updateRepository(id, dataToUpdate);
-  return updated;
 };
 
 export default updateService;
