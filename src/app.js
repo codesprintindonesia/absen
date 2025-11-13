@@ -2,12 +2,10 @@
 import "./instrumentation.js";
 
 import { httpServer, httpPort } from "./servers/http.server.js";
-import { validateEnv } from "./validations/env.validation.js"; 
+import { validateEnv } from "./validations/env.validation.js";
 import logger from "./libraries/logger.library.js";
-// const { logger } = await import("./libraries/logger.library.js");
-// const { httpServer, httpPort } = await import("./servers/http.server.js");
-// const { validateEnv } = await import("./validations/env.validation.js");
-
+import { initializeCronScheduler, shutdownCronScheduler } from "./schedulers/centralizedCron.scheduler.js";
+ 
 // Validate Environment
 try {
   const validEnv = validateEnv();
@@ -17,8 +15,17 @@ try {
   process.exit(1);
 } 
 
+// Initialize Cron Scheduler
+try {
+  await initializeCronScheduler();
+  logger.info('Cron scheduler initialized successfully');
+} catch (error) {
+  logger.error('Failed to initialize cron scheduler', { error: error.message });
+  // Continue without cron scheduler - non-critical
+}
+
 // Start HTTP Server
-httpServer.listen(httpPort, "0.0.0.0", () => { 
+httpServer.listen(httpPort, "0.0.0.0", () => {
   logger.info(`HTTP Server running on port ${httpPort}`, {
     env: process.env.NODE_ENV
   });
@@ -27,7 +34,15 @@ httpServer.listen(httpPort, "0.0.0.0", () => {
 // Graceful Shutdown Handler
 const shutdown = async (signal) => {
   logger.info(`${signal} received, shutting down gracefully...`);
-  
+
+  // Shutdown cron scheduler first
+  try {
+    shutdownCronScheduler();
+    logger.info('Cron scheduler shutdown complete');
+  } catch (error) {
+    logger.error('Error shutting down cron scheduler', { error: error.message });
+  }
+
   httpServer.close(() => {
     logger.info('HTTP server closed');
     process.exit(0);

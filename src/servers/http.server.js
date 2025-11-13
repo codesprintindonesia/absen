@@ -1,6 +1,9 @@
 // src/servers/http.server.js
 import express from "express";
 import { config as dotenv } from "dotenv";
+import helmet from "helmet";
+import cors from "cors";
+import { rateLimit } from "express-rate-limit";
 import Database from "../libraries/databaseConnection.library.js";
 import "../models/associations.model.js";
 import mainRoutes from "../routes/main.route.js";
@@ -29,6 +32,87 @@ const httpPort = process.env.PORT || 3000;
     });
   }
 })();
+
+// ================================================================
+// SECURITY MIDDLEWARES (Applied First)
+// ================================================================
+
+/* Helmet - Security Headers */
+httpServer.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"], // For Swagger UI
+      scriptSrc: ["'self'", "'unsafe-inline'"], // For Swagger UI
+      imgSrc: ["'self'", "data:", "validator.swagger.io"], // For Swagger UI
+    },
+  },
+  crossOriginEmbedderPolicy: false, // For Swagger UI compatibility
+}));
+logger.info("Helmet security headers enabled");
+
+/* CORS Configuration */
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',')
+      : ['http://localhost:3000', 'http://localhost:5000'];
+
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      logger.warn('CORS request blocked', { origin });
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['X-Request-Id'],
+  maxAge: 86400, // 24 hours
+};
+
+httpServer.use(cors(corsOptions));
+logger.info("CORS enabled with origin validation");
+
+/* Rate Limiting */
+const limiter = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes default
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // 100 requests per windowMs
+  message: {
+    code: 429,
+    message: "Too many requests from this IP, please try again later.",
+    data: null,
+    metadata: {
+      retryAfter: "15 minutes",
+    },
+  },
+  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
+  legacyHeaders: false, // Disable `X-RateLimit-*` headers
+  skip: (req) => {
+    // Skip rate limiting for health check
+    return req.path === '/api/health';
+  },
+  handler: (req, res, next, options) => {
+    logger.warn('Rate limit exceeded', {
+      ip: req.ip,
+      path: req.path,
+      method: req.method,
+    });
+    res.status(options.statusCode).json(options.message);
+  },
+});
+
+// Apply rate limiting to all API routes
+httpServer.use('/api', limiter);
+logger.info("Rate limiting enabled (100 req/15min default)");
+
+// ================================================================
+// BASIC MIDDLEWARES
+// ================================================================
 
 /* Middleware dasar */
 httpServer.use(express.json());

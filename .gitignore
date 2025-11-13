@@ -6,6 +6,9 @@ yarn-error.log*
 package-lock.json
 yarn.lock
 
+.md
+.log
+
 # Build outputs
 dist/
 build/
@@ -13,15 +16,17 @@ out/
 *.tgz
 *.tar.gz
 
-# Environment variables
+# Environment variables (IMPORTANT: .env.example should NOT be ignored!)
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
-.env.example
 
-.pem
+# Certificates and keys
+*.pem
+*.key
+*.crt
 
 .claude
 
@@ -156,8 +161,5 @@ composer.lock
 *.bak
 *.backup
 
-*.enc
-*.crt
-*.key
-*.log 
-*.cjs
+# Encrypted database configs (runtime generated)
+src/files/databases/*.enc
