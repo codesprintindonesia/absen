@@ -1,43 +1,26 @@
 // ================================================================
 // src/schedulers/jobs/rekonsiliasi.job.js
-// Job executor untuk rekonsiliasi absensi harian
+// Job executor untuk rekonsiliasi absensi harian (H-1)
 // ================================================================
 
-import prosesRekonsiliasi from "../../services/transactional/absensiHarian/rekonsiliasi.service.js";
+import { prosesRekonsiliasi } from "../../services/transactional/absensiHarian/rekonsiliasi.service.js";
 
 /**
- * Execute rekonsiliasi absensi harian
- * @param {Object} [params] - Job parameters
- * @param {string} [params.tanggal] - Tanggal to process (YYYY-MM-DD), default: yesterday
- * @param {boolean} [params.skipWeekend=false] - Skip if weekend
+ * Execute rekonsiliasi absensi harian untuk kemarin (H-1)
+ * Pure service call - no parameters, static behavior
  * @returns {Promise<void>}
  */
-export const jalankanRekonsiliasi = async (params = {}) => {
+export const jalankanRekonsiliasi = async () => {
   console.log("📝 Starting rekonsiliasi absensi harian job...");
 
-  // Determine target date
-  let targetDate;
-  if (params.tanggal) {
-    targetDate = new Date(params.tanggal);
-  } else {
-    // Default: yesterday (H-1)
-    targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() - 1);
-  }
+  // Calculate yesterday (H-1)
+  const targetDate = new Date();
+  targetDate.setDate(targetDate.getDate() - 1);
   targetDate.setHours(0, 0, 0, 0);
-
-  // Skip weekend if configured
-  if (params.skipWeekend) {
-    const dayOfWeek = targetDate.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) {
-      console.log(`⚠️  Skipping rekonsiliasi - ${targetDate.toDateString()} is a weekend`);
-      return;
-    }
-  }
 
   console.log(`📅 Processing date: ${targetDate.toISOString()}`);
 
-  // Execute rekonsiliasi
+  // Execute rekonsiliasi service
   await prosesRekonsiliasi(targetDate);
 
   console.log("✅ Rekonsiliasi job completed");

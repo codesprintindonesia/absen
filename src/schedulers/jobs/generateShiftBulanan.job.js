@@ -1,57 +1,39 @@
 // ================================================================
 // src/schedulers/jobs/generateShiftBulanan.job.js
-// Job executor untuk generate shift harian bulanan
+// Job executor untuk generate shift harian bulanan (bulan depan)
 // ================================================================
 
 import { generateShiftHarianPegawaiService } from "../../services/transactional/shiftHarianPegawai/generate.service.js";
 
 /**
- * Execute generate shift harian untuk bulan depan
- * @param {Object} [params] - Job parameters
- * @param {string} [params.tanggalMulai] - Start date (YYYY-MM-DD), default: first day of next month
- * @param {string} [params.tanggalAkhir] - End date (YYYY-MM-DD), default: last day of next month
- * @param {string} [params.idPegawai] - Specific employee ID (null for all employees)
- * @param {string} [params.mode='skip'] - Mode: 'skip', 'overwrite', or 'error'
- * @param {number} [params.offsetMonth=1] - How many months ahead (1 = next month)
+ * Execute generate shift harian untuk bulan depan (all employees, mode: skip)
+ * Pure service call - no parameters, static behavior
  * @returns {Promise<void>}
  */
-export const jalankanGenerateShiftBulanan = async (params = {}) => {
+export const jalankanGenerateShiftBulanan = async () => {
   console.log("📆 Starting generate shift harian bulanan job...");
 
-  // Determine date range
-  let tanggalMulai;
-  let tanggalAkhir;
+  // Calculate next month date range
+  const now = new Date();
 
-  if (params.tanggalMulai && params.tanggalAkhir) {
-    tanggalMulai = params.tanggalMulai;
-    tanggalAkhir = params.tanggalAkhir;
-  } else {
-    // Default: next month
-    const offsetMonth = params.offsetMonth || 1;
-    const now = new Date();
+  // First day of next month
+  const firstDay = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const tanggalMulai = firstDay.toISOString().substring(0, 10); // YYYY-MM-DD
 
-    // First day of target month
-    const firstDay = new Date(now.getFullYear(), now.getMonth() + offsetMonth, 1);
-    tanggalMulai = firstDay.toISOString().substring(0, 10); // YYYY-MM-DD
-
-    // Last day of target month
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + offsetMonth + 1, 0);
-    tanggalAkhir = lastDay.toISOString().substring(0, 10); // YYYY-MM-DD
-  }
-
-  const mode = params.mode || "skip";
-  const idPegawai = params.idPegawai || null;
+  // Last day of next month
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  const tanggalAkhir = lastDay.toISOString().substring(0, 10); // YYYY-MM-DD
 
   console.log(`📅 Generating shifts for period: ${tanggalMulai} to ${tanggalAkhir}`);
-  console.log(`👥 Target: ${idPegawai || 'All employees'}`);
-  console.log(`🔧 Mode: ${mode}`);
+  console.log(`👥 Target: All employees`);
+  console.log(`🔧 Mode: skip`);
 
-  // Execute generation
+  // Execute generation service
   const result = await generateShiftHarianPegawaiService({
     tanggalMulai,
     tanggalAkhir,
-    idPegawai,
-    mode,
+    idPegawai: null, // All employees
+    mode: "skip", // Skip existing records
   });
 
   if (result.success) {

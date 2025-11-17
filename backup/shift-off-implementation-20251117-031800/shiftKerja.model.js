@@ -43,12 +43,6 @@ const ShiftKerja = sequelize.define('m_shift_kerja', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
-  is_hari_kerja: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: true,
-    comment: 'Flag untuk menandai apakah shift ini adalah hari kerja (TRUE) atau libur/off (FALSE)',
-  },
   is_active: {
     type: DataTypes.BOOLEAN,
     allowNull: true,

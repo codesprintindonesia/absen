@@ -5,7 +5,11 @@
       "Bash(chmod:*)",
       "Bash(test-security.js)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(node src/scripts/seedCronJobs.script.js:*)",
+      "Bash(node:*)",
+      "Bash(cp:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

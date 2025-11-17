@@ -1,32 +1,21 @@
 // ================================================================
 // src/schedulers/jobs/generateLemburBulanan.job.js
-// Job executor untuk generate laporan lembur bulanan
+// Job executor untuk generate laporan lembur bulanan (bulan lalu)
 // ================================================================
 
 import { generateRealisasiLemburBulananAllPegawai } from "../../services/laporan/realisasiLembur/generateBulanan.service.js";
 
 /**
- * Execute generate laporan lembur bulanan untuk semua pegawai
- * @param {Object} [params] - Job parameters
- * @param {string} [params.periodeBulan] - Period month (YYYY-MM-DD), default: last month
- * @param {number} [params.offsetMonth=1] - How many months back (1 = last month, 2 = 2 months ago)
+ * Execute generate laporan lembur bulanan untuk bulan lalu
+ * Pure service call - no parameters, static behavior
  * @returns {Promise<void>}
  */
-export const jalankanGenerateLemburBulanan = async (params = {}) => {
+export const jalankanGenerateLemburBulanan = async () => {
   console.log("📊 Starting generate laporan lembur bulanan job...");
 
-  // Determine period
-  let periodeBulan;
-  if (params.periodeBulan) {
-    periodeBulan = new Date(params.periodeBulan);
-  } else {
-    // Default: last month
-    const offsetMonth = params.offsetMonth || 1;
-    periodeBulan = new Date();
-    periodeBulan.setMonth(periodeBulan.getMonth() - offsetMonth);
-  }
-
-  // Normalize to first day of month
+  // Calculate last month
+  const periodeBulan = new Date();
+  periodeBulan.setMonth(periodeBulan.getMonth() - 1);
   periodeBulan.setDate(1);
   periodeBulan.setHours(0, 0, 0, 0);
 
@@ -34,7 +23,7 @@ export const jalankanGenerateLemburBulanan = async (params = {}) => {
 
   console.log(`📅 Processing period: ${periodStr}`);
 
-  // Execute generation
+  // Execute generation service
   const result = await generateRealisasiLemburBulananAllPegawai(periodeBulan);
 
   if (result.success) {

@@ -29,17 +29,13 @@ export const getShiftHarianByDate = async (tanggal, options = {}) => {
         model: ShiftKerja,
         as: 'shiftKerja',
         required: true,
-        where: {
-          is_hari_kerja: true  // FILTER: Hanya shift hari kerja, skip shift OFF/Libur
-        },
         attributes: [
           'id',
           'nama',
           'jam_masuk',
           'jam_pulang',
           'durasi_istirahat',
-          'toleransi_keterlambatan',
-          'is_hari_kerja'
+          'toleransi_keterlambatan'
         ]
       },
       {

@@ -1,16 +1,10 @@
 // ================================================================
 // src/schedulers/centralizedCron.scheduler.js
-// Centralized cron scheduler dengan dynamic enable/disable dari database
+// Pure static cron scheduler - no database dependency
 // ================================================================
 
 import cron from "node-cron";
-import parser from "cron-parser";
-import { getAllCronJobsService, updateLastRunService } from "../services/system/cronJobConfig/manageCronJob.service.js";
-
-// Import job executors
-import { jalankanRekonsiliasi } from "./jobs/rekonsiliasi.job.js";
-import { jalankanGenerateLemburBulanan } from "./jobs/generateLemburBulanan.job.js";
-import { jalankanGenerateShiftBulanan } from "./jobs/generateShiftBulanan.job.js";
+import { CRON_JOBS, getEnabledCronJobs } from "./cronJobs.config.js";
 
 // ================================================================
 // SCHEDULER STATE MANAGEMENT
@@ -22,52 +16,19 @@ import { jalankanGenerateShiftBulanan } from "./jobs/generateShiftBulanan.job.js
  */
 const activeTasks = new Map();
 
-/**
- * Map untuk menyimpan job executor functions
- * Key: job_type, Value: async function
- */
-const jobExecutors = new Map([
-  ["REKONSILIASI_HARIAN", jalankanRekonsiliasi],
-  ["GENERATE_LEMBUR_BULANAN", jalankanGenerateLemburBulanan],
-  ["GENERATE_SHIFT_BULANAN", jalankanGenerateShiftBulanan],
-  // Tambahkan job executors lainnya di sini
-]);
-
 // ================================================================
 // HELPER FUNCTIONS
 // ================================================================
 
 /**
- * Calculate next run time dari cron expression
- * @param {string} cronExpression - Cron expression
- * @param {string} timezone - Timezone
- * @returns {Date|null} Next run time or null if error
- */
-const calculateNextRun = (cronExpression, timezone = "Asia/Makassar") => {
-  try {
-    const interval = parser.parseExpression(cronExpression, {
-      currentDate: new Date(),
-      tz: timezone,
-    });
-    return interval.next().toDate();
-  } catch (error) {
-    console.error(`Error parsing cron expression "${cronExpression}":`, error.message);
-    return null;
-  }
-};
-
-/**
- * Validate cron expression
+ * Validate cron expression (6 field format untuk node-cron)
+ * Format: second minute hour day month day-of-week
+ * Contoh: "0 0 2 * * *" = setiap hari jam 02:00:00
  * @param {string} cronExpression - Cron expression to validate
  * @returns {boolean} True if valid
  */
 const isValidCronExpression = (cronExpression) => {
-  try {
-    parser.parseExpression(cronExpression);
-    return true;
-  } catch (error) {
-    return false;
-  }
+  return cron.validate(cronExpression);
 };
 
 // ================================================================
@@ -76,21 +37,20 @@ const isValidCronExpression = (cronExpression) => {
 
 /**
  * Start a single cron job
- * @param {Object} jobConfig - Job configuration from database
+ * @param {Object} jobConfig - Job configuration from static config
  * @returns {boolean} True if started successfully
  */
 const startCronJob = (jobConfig) => {
   try {
     // Validasi cron expression
-    if (!isValidCronExpression(jobConfig.cron_expression)) {
-      console.error(`❌ Invalid cron expression for ${jobConfig.id}: ${jobConfig.cron_expression}`);
+    if (!isValidCronExpression(jobConfig.schedule)) {
+      console.error(`❌ Invalid cron expression for ${jobConfig.id}: ${jobConfig.schedule}`);
       return false;
     }
 
-    // Cek apakah job executor tersedia
-    const executor = jobExecutors.get(jobConfig.job_type);
-    if (!executor) {
-      console.error(`❌ No executor found for job type: ${jobConfig.job_type}`);
+    // Validasi executor
+    if (!jobConfig.executor || typeof jobConfig.executor !== 'function') {
+      console.error(`❌ No executor function for job: ${jobConfig.id}`);
       return false;
     }
 
@@ -102,54 +62,34 @@ const startCronJob = (jobConfig) => {
 
     // Create scheduled task
     const task = cron.schedule(
-      jobConfig.cron_expression,
+      jobConfig.schedule,
       async () => {
-        console.log(`\n🎯 [${new Date().toISOString()}] Executing cron job: ${jobConfig.job_name} (${jobConfig.id})`);
+        console.log(`\n🎯 [${new Date().toISOString()}] Executing: ${jobConfig.name} (${jobConfig.id})`);
 
         const startTime = new Date();
-        let status = "SUCCESS";
-        let error = null;
 
         try {
-          // Execute job dengan config params
-          await executor(jobConfig.config_params || {});
-
-          console.log(`✅ [${new Date().toISOString()}] Job ${jobConfig.job_name} completed successfully`);
-        } catch (err) {
-          status = "FAILED";
-          error = err.message;
-          console.error(`❌ [${new Date().toISOString()}] Job ${jobConfig.job_name} failed:`, err.message);
-        }
-
-        // Update last run info di database
-        try {
-          const nextRun = calculateNextRun(jobConfig.cron_expression, jobConfig.timezone);
-
-          await updateLastRunService(jobConfig.id, {
-            status,
-            error,
-            nextRun,
-          });
+          // Execute job (pure service call, no params)
+          await jobConfig.executor();
 
           const duration = Math.round((new Date() - startTime) / 1000);
-          console.log(`📊 Job execution took ${duration}s. Next run: ${nextRun ? nextRun.toISOString() : 'N/A'}`);
-        } catch (updateErr) {
-          console.error(`⚠️  Failed to update last run info:`, updateErr.message);
+          console.log(`✅ [${new Date().toISOString()}] ${jobConfig.name} completed in ${duration}s`);
+        } catch (err) {
+          console.error(`❌ [${new Date().toISOString()}] ${jobConfig.name} failed:`, err.message);
+          console.error(err.stack);
         }
       },
       {
         scheduled: true,
-        timezone: jobConfig.timezone || "Asia/Makassar",
+        timezone: "Asia/Makassar",
       }
     );
 
     // Simpan task ke map
     activeTasks.set(jobConfig.id, task);
 
-    const nextRun = calculateNextRun(jobConfig.cron_expression, jobConfig.timezone);
-    console.log(`✅ Started cron job: ${jobConfig.job_name} (${jobConfig.id})`);
-    console.log(`   Schedule: ${jobConfig.cron_expression}`);
-    console.log(`   Next run: ${nextRun ? nextRun.toISOString() : 'N/A'}`);
+    console.log(`✅ Started: ${jobConfig.name} (${jobConfig.id})`);
+    console.log(`   Schedule: ${jobConfig.schedule}`);
 
     return true;
   } catch (error) {
@@ -184,12 +124,12 @@ const stopCronJob = (jobId) => {
 };
 
 /**
- * Reload all cron jobs from database
+ * Reload all cron jobs from static config
  * Stops all running jobs and starts enabled jobs
- * @returns {Promise<Object>} Summary of reload operation
+ * @returns {Object} Summary of reload operation
  */
-const reloadAllCronJobs = async () => {
-  console.log("\n🔄 Reloading all cron jobs from database...");
+const reloadAllCronJobs = () => {
+  console.log("\n🔄 Reloading cron jobs from static config...");
 
   try {
     // Stop all active jobs
@@ -200,10 +140,10 @@ const reloadAllCronJobs = async () => {
     }
     activeTasks.clear();
 
-    // Get enabled jobs from database
-    const enabledJobs = await getAllCronJobsService({ enabledOnly: true });
+    // Get enabled jobs from config
+    const enabledJobs = getEnabledCronJobs();
 
-    console.log(`\n📋 Found ${enabledJobs.length} enabled jobs in database`);
+    console.log(`\n📋 Found ${enabledJobs.length} enabled jobs in config`);
 
     // Start enabled jobs
     let startedCount = 0;
@@ -239,14 +179,18 @@ const reloadAllCronJobs = async () => {
 /**
  * Initialize cron scheduler
  * Called at application startup
- * @returns {Promise<void>}
+ * @returns {void}
  */
-const initializeCronScheduler = async () => {
-  console.log("\n🚀 Initializing centralized cron scheduler...");
+const initializeCronScheduler = () => {
+  console.log("\n🚀 Initializing static cron scheduler...");
 
   try {
-    await reloadAllCronJobs();
-    console.log("\n✅ Cron scheduler initialized successfully\n");
+    // Load and start enabled cron jobs from static config
+    const result = reloadAllCronJobs();
+
+    console.log("\n✅ Cron scheduler initialized successfully");
+    console.log(`   Active jobs: ${result.started_count}`);
+    console.log(`   Job IDs: ${result.active_jobs.join(", ")}\n`);
   } catch (error) {
     console.error("❌ Failed to initialize cron scheduler:", error.message);
     throw error;
@@ -280,8 +224,11 @@ const getSchedulerStatus = () => {
   const activeJobs = [];
 
   for (const [jobId, task] of activeTasks.entries()) {
+    const jobConfig = CRON_JOBS.find(j => j.id === jobId);
     activeJobs.push({
-      job_id: jobId,
+      id: jobId,
+      name: jobConfig?.name || 'Unknown',
+      schedule: jobConfig?.schedule || 'Unknown',
       is_running: true,
     });
   }
@@ -289,46 +236,9 @@ const getSchedulerStatus = () => {
   return {
     active_jobs_count: activeTasks.size,
     active_jobs: activeJobs,
-    available_executors: Array.from(jobExecutors.keys()),
+    total_configured_jobs: CRON_JOBS.length,
+    enabled_configured_jobs: CRON_JOBS.filter(j => j.enabled).length,
   };
-};
-
-/**
- * Enable a specific cron job
- * @param {string} jobId - Job ID to enable
- * @returns {Promise<boolean>} True if enabled successfully
- */
-const enableCronJob = async (jobId) => {
-  try {
-    // Get job config from database
-    const { getCronJobByIdService } = await import("../services/system/cronJobConfig/manageCronJob.service.js");
-    const jobConfig = await getCronJobByIdService(jobId);
-
-    if (!jobConfig.is_enabled) {
-      console.error(`❌ Job ${jobId} is not enabled in database`);
-      return false;
-    }
-
-    // Stop if already running
-    if (activeTasks.has(jobId)) {
-      stopCronJob(jobId);
-    }
-
-    // Start job
-    return startCronJob(jobConfig);
-  } catch (error) {
-    console.error(`❌ Error enabling cron job ${jobId}:`, error.message);
-    return false;
-  }
-};
-
-/**
- * Disable a specific cron job
- * @param {string} jobId - Job ID to disable
- * @returns {boolean} True if disabled successfully
- */
-const disableCronJob = (jobId) => {
-  return stopCronJob(jobId);
 };
 
 // ================================================================
@@ -336,14 +246,15 @@ const disableCronJob = (jobId) => {
 // ================================================================
 
 export {
+  // Lifecycle
   initializeCronScheduler,
   shutdownCronScheduler,
+
+  // Job Management
   reloadAllCronJobs,
-  enableCronJob,
-  disableCronJob,
-  getSchedulerStatus,
-  startCronJob,
   stopCronJob,
-  calculateNextRun,
+
+  // Status & Utils
+  getSchedulerStatus,
   isValidCronExpression,
 };
