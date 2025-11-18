@@ -30,6 +30,37 @@ const asymetricSignatureMiddleware = () => {
 
       console.log("TIMESTAMP", timeStamp);
 
+      // Validasi timestamp - tidak boleh lebih dari 1 jam yang lalu
+      // Format yang diterima: ISO 8601 (yyyy-MM-ddTHH:mm:ssTZD)
+      // Contoh: 2025-11-18T10:30:00+08:00 atau 2025-11-18T03:30:00Z
+      const currentTime = new Date();
+      const requestTime = new Date(timeStamp);
+      const oneHourInMs = 60 * 60 * 1000; // 1 jam dalam milliseconds
+
+      console.log('JAM REQUEST', requestTime);
+      console.log('JAM SEKARANG', currentTime)
+
+      // Validasi format ISO 8601
+      if (isNaN(requestTime.getTime()) || !timeStamp.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/)) {
+        throw new Error(
+          "Service Absensi - Format timestamp tidak valid. Gunakan format ISO 8601 (yyyy-MM-ddTHH:mm:ssTZD)"
+        );
+      }
+
+      const timeDifference = currentTime.getTime() - requestTime.getTime();
+
+      if (timeDifference > oneHourInMs) {
+        throw new Error(
+          "Service Absensi - Timestamp sudah kadaluarsa (lebih dari 1 jam)"
+        );
+      }
+
+      if (timeDifference < 0) {
+        throw new Error(
+          "Service Absensi - Timestamp dari masa depan tidak valid"
+        );
+      }
+
       const signature = Buffer.from(
         req.header("X-SIGNATURE"),
         "base64"
@@ -89,10 +120,14 @@ const asymetricSignatureMiddleware = () => {
     } catch (error) {
       logger.error("Asymetric Signature verification failed", {
         error: error.message,
+        trace_id: req.traceId,
       });
       sendResponse(res, {
         httpCode: HTTP_STATUS.BAD_REQUEST,
         message: error.message,
+        metadata: {
+          error_type: "signature_verification_failed",
+        },
       });
     }
   };

@@ -42,6 +42,28 @@ export const envSchema = Joi.object({
     .default("info"),
   LOG_FILE_MAXSIZE: Joi.string().default("10m"),
 
+  // Cron Jobs configuration
+  CRON_ENABLED: Joi.string()
+    .valid("true", "false", "TRUE", "FALSE")
+    .default("true"),
+
+  // Individual cron job controls (optional)
+  CRON_REKONSILIASI_HARIAN_ENABLED: Joi.string()
+    .valid("true", "false", "TRUE", "FALSE")
+    .optional(),
+
+  CRON_GENERATE_LEMBUR_BULANAN_ENABLED: Joi.string()
+    .valid("true", "false", "TRUE", "FALSE")
+    .optional(),
+
+  CRON_GENERATE_SHIFT_BULANAN_ENABLED: Joi.string()
+    .valid("true", "false", "TRUE", "FALSE")
+    .optional(),
+
+  CRON_TEST_CRON_ENABLED: Joi.string()
+    .valid("true", "false", "TRUE", "FALSE")
+    .optional(),
+
 }).unknown(true); // Allow other env vars
 
 export function validateEnv(envObj = process.env) {

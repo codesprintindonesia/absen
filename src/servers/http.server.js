@@ -12,6 +12,7 @@ import logger from "../libraries/logger.library.js";
 import { specs, swaggerUi } from "../configs/swagger.config.js";
 import aesMiddleware from "../middlewares/aes.middleware.js";
 import asymetricSignatureMiddleware from "../middlewares/asymetricSignature.middleware.js";
+import traceIdMiddleware from "../middlewares/traceId.middleware.js";
 import aesRoutes from "../routes/aes.route.js";
 
 dotenv();
@@ -117,6 +118,10 @@ logger.info("Rate limiting enabled (100 req/15min default)");
 /* Middleware dasar */
 httpServer.use(express.json());
 httpServer.use(express.urlencoded({ extended: false }));
+
+/* Trace ID Middleware - harus dipasang sebelum requestLogger */
+httpServer.use(traceIdMiddleware());
+logger.info("Trace ID middleware mounted (OpenTelemetry integration)");
 
 /* Asymetric Signature & AES Encryption */
 const asymetricSignature = process.env.ASYMETRIC_SIGNATURE;

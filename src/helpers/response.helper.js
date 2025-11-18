@@ -19,5 +19,21 @@ export function sendResponse(
     metadata = null,
   } = {}
 ) {
-  return res.status(httpCode).json(buildResponse({ code, message, data, metadata }));
+  // Ambil trace_id dan span_id dari request object (diset oleh traceIdMiddleware)
+  const traceId = res.req?.traceId;
+  const spanId = res.req?.spanId;
+
+  // Merge metadata dengan trace information
+  const enrichedMetadata = {
+    ...metadata,
+    ...(traceId && { trace_id: traceId }),
+    ...(spanId && { span_id: spanId }),
+  };
+
+  return res.status(httpCode).json(buildResponse({
+    code,
+    message,
+    data,
+    metadata: enrichedMetadata
+  }));
 }

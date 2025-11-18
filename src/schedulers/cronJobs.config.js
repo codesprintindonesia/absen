@@ -9,6 +9,33 @@ import { jalankanGenerateShiftBulanan } from "./jobs/generateShiftBulanan.job.js
 import { jalankanTestCron } from "./jobs/testCron.job.js";
 
 /**
+ * Helper function to check if a cron job is enabled via environment variable
+ * Priority: ENV > Default config value
+ *
+ * @param {string} jobId - Job ID (e.g., "REKONSILIASI_HARIAN")
+ * @param {boolean} defaultEnabled - Default enabled value from config
+ * @returns {boolean} True if job should be enabled
+ */
+const isCronJobEnabled = (jobId, defaultEnabled) => {
+  // Check global CRON_ENABLED first
+  const globalEnabled = process.env.CRON_ENABLED;
+  if (globalEnabled === "false" || globalEnabled === "FALSE") {
+    return false; // Disable all cron jobs
+  }
+
+  // Check specific job ENV variable (format: CRON_JOB_ID_ENABLED)
+  const envKey = `CRON_${jobId}_ENABLED`;
+  const envValue = process.env[envKey];
+
+  if (envValue !== undefined) {
+    return envValue === "true" || envValue === "TRUE";
+  }
+
+  // Fallback to default config value
+  return defaultEnabled;
+};
+
+/**
  * Static cron job configurations
  *
  * Cron Expression Format (6 fields):
@@ -22,10 +49,19 @@ import { jalankanTestCron } from "./jobs/testCron.job.js";
  * * * * * * *
  *
  * Examples:
- * - "0 0 2 * * *"    → Every day at 02:00:00
- * - "0 0 1 1 * *"    → 1st day of month at 01:00:00
- * - "0 0 0 1 * *"    → 1st day of month at 00:00:00
- * - "* /10 * * * * *" → Every 10 seconds (for testing)
+ * - "0 0 2 * * *"        → Every day at 02:00:00
+ * - "0 0 1 1 * *"        → 1st day of month at 01:00:00
+ * - "0 0 0 1 * *"        → 1st day of month at 00:00:00
+ * - "star/10 * * * * *"  → Every 10 seconds (replace "star" with *)
+ *
+ * Environment Variables:
+ * - CRON_ENABLED=true/false → Enable/disable all cron jobs globally
+ * - CRON_<JOB_ID>_ENABLED=true/false → Enable/disable specific job
+ *
+ * Example:
+ * - CRON_ENABLED=true
+ * - CRON_REKONSILIASI_HARIAN_ENABLED=true
+ * - CRON_TEST_CRON_ENABLED=false
  */
 export const CRON_JOBS = [
   {
@@ -33,7 +69,7 @@ export const CRON_JOBS = [
     name: "Rekonsiliasi Absensi Harian",
     description: "Rekonsiliasi data absensi untuk hari sebelumnya (H-1)",
     schedule: "0 0 2 * * *", // Every day at 02:00
-    enabled: true,
+    enabled: isCronJobEnabled("REKONSILIASI_HARIAN", true),
     executor: jalankanRekonsiliasi,
   },
   {
@@ -41,7 +77,7 @@ export const CRON_JOBS = [
     name: "Generate Laporan Lembur Bulanan",
     description: "Generate laporan lembur untuk bulan sebelumnya",
     schedule: "0 0 1 1 * *", // 1st day of month at 01:00
-    enabled: true,
+    enabled: isCronJobEnabled("GENERATE_LEMBUR_BULANAN", true),
     executor: jalankanGenerateLemburBulanan,
   },
   {
@@ -49,7 +85,7 @@ export const CRON_JOBS = [
     name: "Generate Shift Harian Bulanan",
     description: "Generate jadwal shift untuk bulan depan",
     schedule: "0 0 0 1 * *", // 1st day of month at 00:00
-    enabled: true,
+    enabled: isCronJobEnabled("GENERATE_SHIFT_BULANAN", true),
     executor: jalankanGenerateShiftBulanan,
   },
   {
@@ -57,7 +93,7 @@ export const CRON_JOBS = [
     name: "Test Cron Job",
     description: "Test cron job untuk development/testing",
     schedule: "*/10 * * * * *", // Every 10 seconds
-    enabled: false, // Disabled by default
+    enabled: isCronJobEnabled("TEST_CRON", false), // Disabled by default
     executor: jalankanTestCron,
   },
 ];
