@@ -14,6 +14,7 @@ import shiftHarianPegawaiRoutes from "./transactional/shiftHarianPegawai.route.j
 import absensiHarianRoutes from "./transactional/absensiHarian.route.js";
 import realisasiLemburRoutes from "./laporan/realisasiLembur.route.js";
 import auditLogRoutes from "./system/auditLog.route.js";
+import cronRoutes from "./system/cron.route.js";
 
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use("/realisasi-lembur", realisasiLemburRoutes);
 
 // System routes
 router.use("/audit-logs", auditLogRoutes);
+router.use("/system/cron", cronRoutes);
 
 // Error handler middleware (harus di akhir)
 
