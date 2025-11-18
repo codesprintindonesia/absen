@@ -3,7 +3,6 @@ import express from "express";
 import { config as dotenv } from "dotenv";
 import helmet from "helmet";
 import cors from "cors";
-import { rateLimit } from "express-rate-limit";
 import Database from "../libraries/databaseConnection.library.js";
 import "../models/associations.model.js";
 import mainRoutes from "../routes/main.route.js";
@@ -78,38 +77,6 @@ const corsOptions = {
 
 httpServer.use(cors(corsOptions));
 logger.info("CORS enabled with origin validation");
-
-/* Rate Limiting */
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes default
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // 100 requests per windowMs
-  message: {
-    code: 429,
-    message: "Too many requests from this IP, please try again later.",
-    data: null,
-    metadata: {
-      retryAfter: "15 minutes",
-    },
-  },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  skip: (req) => {
-    // Skip rate limiting for health check
-    return req.path === '/api/health';
-  },
-  handler: (req, res, next, options) => {
-    logger.warn('Rate limit exceeded', {
-      ip: req.ip,
-      path: req.path,
-      method: req.method,
-    });
-    res.status(options.statusCode).json(options.message);
-  },
-});
-
-// Apply rate limiting to all API routes
-httpServer.use('/api', limiter);
-logger.info("Rate limiting enabled (100 req/15min default)");
 
 // ================================================================
 // BASIC MIDDLEWARES

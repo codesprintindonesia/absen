@@ -317,16 +317,12 @@ LIMIT 20;
 
 ## 🎯 Next Steps (Optional Enhancements)
 
-1. **Authentication & Authorization**
-   - Add JWT middleware to routes
-   - Role-based access control (admin only for enable/disable)
-
-2. **Monitoring & Alerts**
+1. **Monitoring & Alerts**
    - Email notification for failed jobs
    - Slack/Teams integration for alerts
    - Dashboard UI for cron job management
 
-3. **Advanced Features**
+2. **Advanced Features**
    - Job execution history table
    - Job retry mechanism for failures
    - Job dependencies (run job B after job A succeeds)
